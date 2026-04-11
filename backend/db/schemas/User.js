@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       index: true,
+      minlength: 6,
     },
     password: { type: String, required: true },
     rollNo: {
@@ -28,6 +29,8 @@ const userSchema = new mongoose.Schema(
     semester: {
       type: Number,
       required: true,
+      min: 1,
+      max: 8,
     },
     branch: {
       type: String,

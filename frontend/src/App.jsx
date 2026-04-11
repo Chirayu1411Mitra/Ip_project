@@ -1,12 +1,12 @@
 import React from 'react'
-import Login from './pages/Login'
-import Register from './pages/register'
+import AppRoute from './Router/AppRoute'
+import { AuthProvider } from './context/AuthContext'
 
   const App = () => {
     return (
-      <div>
-        <Login />
-      </div>
+      <AuthProvider>
+        <AppRoute />
+      </AuthProvider>
     )
 }
 

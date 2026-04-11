@@ -2,9 +2,15 @@ import express from "express";
 import dotenv from "dotenv";
 
 import connectDB from "./db/config.js";
+import { applyGlobalMiddlewares } from "./middlewares/globalMiddlewares.js";
+import authRoutes from "./routes/authRoutes.js";
+
 
 const app = express();
 
+applyGlobalMiddlewares(app);
+
+app.use("/api/auth", authRoutes);
 dotenv.config();
 // connect to database
 connectDB();

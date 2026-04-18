@@ -1,39 +1,41 @@
-# CampusConnect
+# UConnect
 
-> CampusConnect is a real-time student collaboration and resource management platform designed specifically for university environments. It provides a centralized and structured space where students can share academic resources, interact with peers, and stay organized with their coursework.
+> UConnect is a student-focused collaboration platform for sharing notes, asking academic doubts, and staying connected with classmates in one place.
 
-In many campuses, students rely on fragmented tools like messaging apps or shared drives, which lack proper organization, real-time collaboration, and academic-focused features. CampusConnect solves this problem by integrating multiple functionalities into a single platform.
+UConnect solves the common problem of scattered academic communication by combining key campus tools into a single web app. Students can upload and access notes, post questions, answer peer doubts, receive notifications, and manage profile information through a clean dashboard-style interface.
 
-The platform allows users to upload and access study materials, post academic doubts and receive peer responses, and participate in real-time study group discussions. Additionally, it includes a deadline tracking system to help students manage assignments efficiently, along with notifications to keep them updated.
-
-Built using the MERN stack (MongoDB, Express.js, React.js, Node.js), CampusConnect also leverages technologies like Socket.io for real-time communication, JWT for secure authentication, and cloud services for file storage and notifications. The system is designed to be scalable, secure, and user-friendly.
-
-Overall, CampusConnect aims to enhance peer-to-peer learning, improve academic productivity, and create a collaborative digital ecosystem for students within a campus.
+Built with a MERN-style architecture (MongoDB, Express, React, Node.js), UConnect uses JWT-based authentication, Socket.io for real-time notification flow, and AWS S3 integration for file uploads. The project is designed to be modular, scalable, and easy to extend for campus use cases.
 
 ---
 
 ## Features
 
-- **Notes hub** — Upload and browse PDFs organized by subject and semester
-- **Doubt forum** — Post academic questions, get peer answers, upvote the best ones
-- **Study group chat** — Create real-time chat rooms with live messaging
-- **Deadline tracker** — Add and manage assignment deadlines with urgency badges
-- **Notifications** — In-app alerts for new answers and upcoming deadlines
-- **Dashboard** — Personal activity stats and progress charts
+- Authentication with secure token-based sessions
+- Notes module with file upload and browse support
+- Doubt forum for posting questions and answers
+- Real-time notification integration
+- User profile view and update flow
+- Protected frontend routes with role-aware access control patterns
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React.js, Tailwind CSS, React Router, Recharts |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas (Mongoose ODM) |
-| Real-time | Socket.io |
-| File Storage | Cloudinary |
-| Authentication | JWT + bcrypt |
-| Hosting | Vercel (frontend), Render (backend) |
+| Layer          | Technology                              |
+| -------------- | --------------------------------------- |
+| Frontend       | React, Vite, Tailwind CSS, React Router |
+| Backend        | Node.js, Express                        |
+| Database       | MongoDB with Mongoose                   |
+| Real-time      | Socket.io                               |
+| File Storage   | AWS S3                                  |
+| Authentication | JWT + bcryptjs                          |
+
+---
+
+## Project Structure
+
+- `backend/` - Express API, MongoDB models, authentication, notifications, upload services
+- `frontend/` - React + Vite client app, pages, reusable components, API services
 
 ---
 
@@ -42,56 +44,57 @@ Overall, CampusConnect aims to enhance peer-to-peer learning, improve academic p
 ### Prerequisites
 
 - Node.js v18+
-- MongoDB Atlas account (free M0 tier)
-- Cloudinary account (free tier)
+- npm
+- MongoDB Atlas (or local MongoDB)
+- AWS account with S3 bucket access
 
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/campusconnect.git
-cd campusconnect
-```
-
-**Backend setup**
+### 1) Install dependencies
 
 ```bash
-cd server
-npm install
+# from project root
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-Create a `.env` file inside `/server`:
+### 2) Environment variables
+
+Create a `.env` file in `backend/` with sample (fake) values:
 
 ```env
-PORT=5000
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/campusconnect
-JWT_SECRET=your_jwt_secret_key
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-CLIENT_URL=http://localhost:3000
+Port=5000
+FRONTEND_URL=http://localhost:5173
+
+MONGODB_URL=mongodb+srv://demo_user:demo_pass_123@demo-cluster.mongodb.net/uconnect_dev?retryWrites=true&w=majority
+
+JWT_SECRET=uconnect_demo_jwt_secret_change_me
+NODE_ENV=development
+
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_S3_BUCKET=uconnect-demo-bucket
 ```
 
-```bash
-npm run dev      # starts server on port 5000
-```
-
-**Frontend setup**
-
-```bash
-cd client
-npm install
-```
-
-Create a `.env` file inside `/client`:
+Create a `.env` file in `frontend/` with sample (fake) values:
 
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_SOCKET_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:5000
 ```
+
+### 3) Run the app
+
+Backend:
 
 ```bash
-npm start        # starts React app on port 3000
+cd backend
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.

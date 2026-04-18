@@ -23,6 +23,7 @@ const api = {
   post: (url, body) => request("POST", url, body),
   put: (url, body) => request("PUT", url, body),
   delete: (url) => request("DELETE", url),
+  upload: (url, formData) => uploadRequest(url, formData),
   patch: (url, body) => request("PATCH", url, body),
 };
 
@@ -38,6 +39,27 @@ async function request(method, url, body = null) {
   const data = await response.json();
 
   if (response.status === 401 && url !== "/auth/me" && url !== "/auth/login") {
+    window.location.href = "/login";
+    return;
+  }
+
+  if (!response.ok) {
+    throw { response: { data, status: response.status } };
+  }
+
+  return { data };
+}
+
+async function uploadRequest(url, formData) {
+  const response = await fetch(`${BASE_URL}${url}`, {
+    method: "POST",
+    credentials: "include",
+    // Do NOT set Content-Type — browser sets multipart/form-data with boundary
+    body: formData,
+  });
+  const data = await response.json();
+
+  if (response.status === 401) {
     window.location.href = "/login";
     return;
   }

@@ -1,5 +1,6 @@
-import { createContext, useEffect, useState, useContext} from "react";
+import { createContext, useEffect, useState, useContext } from "react";
 import authService from "../services/authServices";
+import { normalizeUser } from "../utils/profilePicture";
 
 export const AuthContext = createContext(null);
 
@@ -7,11 +8,17 @@ export const AuthProvider = ({ children }) => {
   const [User, SetUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUserData = async () => {
+    const userData = await authService.getMe();
+    const normalizedUser = normalizeUser(userData);
+    SetUser(normalizedUser);
+    return normalizedUser;
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const userData = await authService.getMe();
-        SetUser(userData);
+        await refreshUserData();
       } catch (error) {
         SetUser(null);
       } finally {
@@ -28,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       console.log("AuthContext: Login response received:", response);
       const { user } = response;
       console.log("AuthContext: Setting user:", user);
-      SetUser(user);
+      SetUser(normalizeUser(user));
       console.log("AuthContext: User set successfully");
     } catch (error) {
       console.error("AuthContext: Login failed:", error);
@@ -37,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
   const register = async (name, email, password) => {
     const { user } = await authService.register(name, email, password);
-    SetUser(user);
+    SetUser(normalizeUser(user));
   };
   const logout = async () => {
     await authService.logout();
@@ -46,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user: User, loading, login, logout, register }}
+      value={{ user: User, loading, login, logout, register, refreshUserData }}
     >
       {children}
     </AuthContext.Provider>

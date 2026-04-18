@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
 import NotesPage from "../pages/NotesPage";
+import Profile from "../pages/Profile";
 import NoteDetail from "../pages/NoteDetail";
 import { AuthProvider } from "../context/AuthContext";
 import DoubtPage from "../pages/DoubtPage";
@@ -24,12 +25,12 @@ const AppRoute = () => {
               <Route path="/" element={<Dashboard />} />
               <Route path="/notes" element={<NotesPage />} />
               <Route path="/notes/:id" element={<NoteDetail />} />
-              {/* <Route path="/doubts"        element={<Doubts />} />
-            <Route path="/doubts/:id"    element={<DoubtDetail />} />
+              <Route path="/doubts"        element={<DoubtPage />} />
+            {/* <Route path="/doubts/:id"    element={<DoubtDetail />} />
             <Route path="/groups"        element={<StudyGroups />} />
             <Route path="/groups/:id"    element={<GroupChat />} />
-            <Route path="/deadlines"     element={<Deadlines />} />
-            <Route path="/profile"       element={<Profile />} /> */}
+            <Route path="/deadlines"     element={<Deadlines />} /> */}
+            <Route path="/profile"       element={<Profile />} />
             </Route>
 
           </Route>

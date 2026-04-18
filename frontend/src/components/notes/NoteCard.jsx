@@ -38,53 +38,53 @@ const NoteCard = ({ note }) => {
     <div
       id={`note-card-${note._id}`}
       onClick={() => navigate(`/notes/${note._id}`)}
-      className="bg-white rounded-[24px] border border-gray-100 p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-purple-50 hover:-translate-y-1 hover:border-purple-100 group"
+      className="bg-white rounded-2xl sm:rounded-[24px] border border-gray-100 p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-purple-50 hover:-translate-y-1 hover:border-purple-100 group flex flex-col h-full"
     >
       {/* Top Row: Icon + Subject Badge */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-[#7C3AED] to-[#9F67FF] rounded-2xl flex items-center justify-center shadow-md shadow-purple-100 group-hover:shadow-lg group-hover:shadow-purple-200 transition-shadow">
-          <FileText className="w-6 h-6 text-white" />
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-gradient-to-br from-[#7C3AED] to-[#9F67FF] rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md shadow-purple-100 group-hover:shadow-lg group-hover:shadow-purple-200 transition-shadow">
+          <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold border ${getSubjectColor(note.subject)}`}
+          className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold border text-center ${getSubjectColor(note.subject)}`}
         >
           {note.subject}
         </span>
       </div>
 
       {/* Title */}
-      <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-2 group-hover:text-[#7C3AED] transition-colors">
+      <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 sm:mb-1.5 line-clamp-2 group-hover:text-[#7C3AED] transition-colors">
         {note.title}
       </h3>
 
       {/* Description */}
       {note.description && (
-        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+        <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4 line-clamp-2">
           {note.description}
         </p>
       )}
 
-      {/* Meta Info */}
-      <div className="flex items-center gap-4 mt-auto pt-4 border-t border-gray-50">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <User size={14} />
-          <span className="font-medium">
+      {/* Meta Info - flex-wrap added for narrow screens */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-auto pt-3 sm:pt-4 border-t border-gray-50">
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400">
+          <User size={14} className="shrink-0" />
+          <span className="font-medium truncate max-w-[100px] sm:max-w-[120px]">
             {note.uploadedBy?.name || "Unknown"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Calendar size={14} />
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400">
+          <Calendar size={14} className="shrink-0" />
           <span>{formatDate(note.createdAt)}</span>
         </div>
       </div>
 
       {/* Bottom Stats */}
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Download size={14} />
+      <div className="flex items-center justify-between mt-2.5 sm:mt-3">
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400">
+          <Download size={14} className="shrink-0" />
           <span>{note.downloads} downloads</span>
         </div>
-        <span className="text-xs text-gray-300 font-medium">
+        <span className="text-[11px] sm:text-xs text-gray-300 font-medium shrink-0">
           {formatFileSize(note.fileSize)}
         </span>
       </div>

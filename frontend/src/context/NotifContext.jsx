@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getNotifications, markAllNotificationsRead } from "../services/api";
+import { getNotifications, markAllNotificationsRead } from "../services/notificationService";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext"; // assuming you have this
 

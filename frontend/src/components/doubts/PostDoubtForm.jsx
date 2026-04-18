@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createDoubt } from "../services/api";
+import { createDoubt } from "../../services/doubtsService";
 import { Send } from "lucide-react";
 
 function PostDoubtForm({ onNewDoubt }) {

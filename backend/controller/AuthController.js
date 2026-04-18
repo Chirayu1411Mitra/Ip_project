@@ -5,6 +5,10 @@ import {
   generateToken,
   clearTokenCookie,
 } from "../utils/genToken.js";
+import { serializeUser } from "../utils/userSerializer.js";
+
+// Helper function to convert user document to JSON with binary conversion
+const getUserJSON = (user) => serializeUser(user);
 
 const login = async (req, res) => {
   try {
@@ -37,16 +41,7 @@ const login = async (req, res) => {
     console.log("Login success for user:", email);
 
     res.json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        rollNo: user.rollNo,
-        semester: user.semester,
-        branch: user.branch,
-        bio: user.bio,
-        avatarURL: user.avatarURL,
-      },
+      user: getUserJSON(user),
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -82,16 +77,7 @@ const register = async (req, res) => {
       branch,
     });
     res.status(201).json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        rollNo: user.rollNo,
-        semester: user.semester,
-        branch: user.branch,
-        bio: user.bio,
-        avatarURL: user.avatarURL,
-      },
+      user: getUserJSON(user),
     });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -108,10 +94,43 @@ const getMe = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+
+    return res.json(getUserJSON(user));
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("GetMe error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
-export { login, register, logout, getMe };
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Delete user from database
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Clear token cookie
+    clearTokenCookie(res);
+
+    console.log("Account deleted for user:", userId);
+
+    return res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+export { login, register, logout, getMe, deleteAccount };

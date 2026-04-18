@@ -27,19 +27,43 @@ const toBase64 = (value) => {
 export const getProfilePictureSrc = (user) => {
   if (!user) return null;
 
-  const picture = user.profilePicture ?? user.avatarURL ?? null;
-
-  if (!picture) return null;
-
-  if (typeof picture === "string") {
-    return picture;
+  // First, check if avatarURL is already a base64 data URI
+  const avatarURL = user.avatarURL || user.profilePicture;
+  if (
+    avatarURL &&
+    typeof avatarURL === "string" &&
+    avatarURL.startsWith("data:")
+  ) {
+    return avatarURL;
   }
 
-  if (typeof picture === "object" && picture.contentType && picture.data) {
-    const base64 = toBase64(picture.data);
-    if (!base64) return null;
+  // Fallback to string-based avatarURL
+  if (avatarURL && typeof avatarURL === "string") {
+    return avatarURL;
+  }
 
-    return `data:${picture.contentType};base64,${base64}`;
+  // Check for binary object format (shouldn't happen with new backend, but keep for compatibility)
+  if (
+    avatarURL &&
+    typeof avatarURL === "object" &&
+    avatarURL.contentType &&
+    avatarURL.data
+  ) {
+    const base64 = toBase64(avatarURL.data);
+    if (!base64) return null;
+    return `data:${avatarURL.contentType};base64,${base64}`;
+  }
+
+  // Check for profileImage object
+  if (
+    user.profileImage &&
+    typeof user.profileImage === "object" &&
+    user.profileImage.contentType &&
+    user.profileImage.data
+  ) {
+    const base64 = toBase64(user.profileImage.data);
+    if (!base64) return null;
+    return `data:${user.profileImage.contentType};base64,${base64}`;
   }
 
   return null;

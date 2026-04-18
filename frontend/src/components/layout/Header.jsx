@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Search, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/authhook";
-import NotificationBell from "../NotificationBell";
+import NotificationBell from "../doubts/NotificationBell";
 import { getProfilePictureSrc } from "../../utils/profilePicture";
 
 const Header = () => {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getDoubts } from "../services/api";
-import PostDoubtForm from "../components/PostDoubtForm";
-import DoubtCard from "../components/DoubtCard";
+import { getDoubts } from "../services/doubtsService";
+import PostDoubtForm from "../components/doubts/PostDoubtForm";
+import DoubtCard from "../components/doubts/DoubtCard";
 import { HelpCircle, MessageSquare, TrendingUp } from "lucide-react";
 import { useLocation } from "react-router-dom";
 

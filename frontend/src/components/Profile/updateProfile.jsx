@@ -12,6 +12,7 @@ import {
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import profileService from "../../services/profileServices";
+import authService from "../../services/authServices";
 import { getProfilePictureSrc } from "../../utils/profilePicture";
 
 const EditProfile = ({ onCancel }) => {
@@ -108,16 +109,26 @@ const EditProfile = ({ onCancel }) => {
     uploadData.append("name", formData.name);
 
     try {
+      console.log("Uploading profile picture...");
       const response = await profileService.uploadProfilePicture(uploadData);
-      setSuccess(true);
+      console.log("Upload response:", response);
 
-      // Update preview immediately with the base64 image from response
-      const profilePictureSrc = getProfilePictureSrc(response.user);
-      if (profilePictureSrc) {
-        setImagePreview(profilePictureSrc);
+      if (response.user && response.user.avatarURL) {
+        console.log(
+          "Avatar URL from response:",
+          response.user.avatarURL.substring(0, 100),
+        );
+        setImagePreview(response.user.avatarURL);
       }
 
-      await refreshUserData();
+      // Refresh user data from server
+      const updatedUser = await refreshUserData();
+      console.log("User data refreshed:", updatedUser);
+
+      setSuccess(true);
+
+      // Clear success message after 2 seconds
+      setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
       console.error("Failed to upload profile picture:", err);
       setError(
@@ -165,10 +176,15 @@ const EditProfile = ({ onCancel }) => {
       setLoading(true);
       try {
         console.log("Account deletion triggered");
-        // await authService.deleteAccount();
+        await authService.deleteAccount();
+
+        // Clear storage and redirect to login
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "/login";
       } catch (err) {
+        console.error("Delete account error:", err);
         setError(err.response?.data?.message || "Failed to delete account");
-      } finally {
         setLoading(false);
       }
     }

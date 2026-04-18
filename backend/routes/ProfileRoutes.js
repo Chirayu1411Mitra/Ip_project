@@ -9,7 +9,7 @@ import {
   recentDoubts,
 } from "../controller/ProfileController.js";
 const profileRouter = express.Router();
-profileRouter.put("/update-profile", authMiddleware, updateProfile);
+profileRouter.patch("/update-profile", authMiddleware, updateProfile);
 profileRouter.post(
   "/upload-avatar",
   authMiddleware,

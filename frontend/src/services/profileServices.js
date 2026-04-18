@@ -1,7 +1,7 @@
 import api from "./api";
 
 const updateProfile = async (userData) => {
-  const { data } = await api.put("/auth/update-profile", userData);
+  const { data } = await api.patch("/profile/update-profile", userData);
   return data;
 };
 

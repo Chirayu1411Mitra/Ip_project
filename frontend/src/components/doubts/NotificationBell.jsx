@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { useNotif } from "../context/NotifContext";
+import { useNotif } from "../../context/NotifContext";
 import { useNavigate } from "react-router-dom";
 
 const NotificationBell = () => {

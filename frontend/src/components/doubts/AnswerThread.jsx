@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { addAnswer } from "../services/api";
+import { addAnswer } from "../../services/answerService";
 import { Send, User } from "lucide-react";
 
 function AnswerThread({ doubt, onDoubtUpdated }) {

@@ -41,5 +41,9 @@ const logout = async () => {
   await api.post("/auth/logout");
 };
 
-const authService = { register, login, getMe, logout };
+const deleteAccount = async () => {
+  await api.delete("/auth/delete-account");
+};
+
+const authService = { register, login, getMe, logout, deleteAccount };
 export default authService;

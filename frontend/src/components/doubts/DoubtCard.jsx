@@ -1,4 +1,4 @@
-import { toggleDoubtUpvote } from "../services/api";
+import { toggleDoubtUpvote } from "../../services/doubtsService";
 import { useState } from "react";
 import AnswerThread from "./AnswerThread";
 import { ThumbsUp, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";

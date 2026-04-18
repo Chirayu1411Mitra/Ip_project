@@ -4,16 +4,17 @@ import Note from "../db/schemas/Note.js";
 import Doubt from "../db/schemas/Doubt.js";
 import multer from "multer";
 import cache from "../utils/cache.js";
+import { serializeUser } from "../utils/userSerializer.js";
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, bio } = req.body;
+    const { bio, name } = req.body;
 
     if (!req.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Only allow updating name and bio
+    // Only allow updating bio and name
     const updateData = {};
     if (name) updateData.name = name;
     if (bio !== undefined) updateData.bio = bio;
@@ -29,23 +30,15 @@ const updateProfile = async (req, res) => {
     // Invalidate user cache after update
     cache.delete(`user_${req.userId}`);
 
-    res.json({
+    return res.json({
       message: "Profile updated successfully",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        rollNo: user.rollNo,
-        semester: user.semester,
-        branch: user.branch,
-        bio: user.bio,
-        avatarURL: user.avatarURL || null,
-        profilePicture: user.avatarURL || null,
-      },
+      user: serializeUser(user),
     });
   } catch (err) {
     console.error("Update profile error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
@@ -61,30 +54,31 @@ const uploadPro = async (req, res) => {
   try {
     // 1. Check for Authentication
     if (!req.userId) {
+      console.log("Upload: Unauthorized - no userId");
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     // 2. Check if file was actually uploaded
     if (!req.file) {
+      console.log("Upload: No file provided");
       return res.status(400).json({ message: "No image file provided" });
     }
 
-    // 3. Extract optional fields from req.body
-    const { name } = req.body;
+    console.log("Upload: Starting avatar upload for user:", req.userId);
+    console.log("File info:", {
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+    });
 
-    // 4. Convert image to base64 and store in MongoDB
-    const imageData = {
-      data: req.file.buffer,
-      contentType: req.file.mimetype,
-    };
-
-    // 5. Build dynamic update object
+    // 3. Store binary image data instead of base64
     const updateFields = {
-      avatarURL: `data:${imageData.contentType};base64,${imageData.data.toString("base64")}`,
+      profileImage: {
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+      },
     };
-    if (name) updateFields.name = name; // Only update name if it was provided
 
-    // 6. Update user in DB using their authenticated ID
+    // 4. Update user in DB using their authenticated ID
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
       { $set: updateFields },
@@ -92,31 +86,29 @@ const uploadPro = async (req, res) => {
     ).select("-password");
 
     if (!updatedUser) {
+      console.log("Upload: User not found:", req.userId);
       return res.status(404).json({ message: "User not found" });
     }
+
+    console.log("Upload: User updated successfully");
+    console.log(
+      "Updated user profileImage size:",
+      updatedUser.profileImage?.data?.length || 0,
+    );
 
     // Invalidate user cache after upload - CRITICAL for immediate display
     cache.delete(`user_${req.userId}`);
 
-    const profilePictureUrl = updatedUser.avatarURL || null;
-
-    res.status(200).json({
+    return res.status(200).json({
       message: "Profile picture uploaded successfully",
-      user: {
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        rollNo: updatedUser.rollNo,
-        semester: updatedUser.semester,
-        branch: updatedUser.branch,
-        bio: updatedUser.bio,
-        avatarURL: profilePictureUrl,
-        profilePicture: profilePictureUrl,
-      },
+      user: serializeUser(updatedUser),
     });
   } catch (error) {
     console.error("Upload error:", error);
-    res.status(500).json({ message: "Internal server error during upload" });
+    return res.status(500).json({
+      message: "Internal server error during upload",
+      error: error.message,
+    });
   }
 };
 const dataStats = async (req, res) => {

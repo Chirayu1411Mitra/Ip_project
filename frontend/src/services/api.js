@@ -23,6 +23,7 @@ const api = {
   post: (url, body) => request("POST", url, body),
   put: (url, body) => request("PUT", url, body),
   delete: (url) => request("DELETE", url),
+  patch: (url, body) => request("PATCH", url, body),
 };
 
 async function request(method, url, body = null) {
@@ -49,3 +50,29 @@ async function request(method, url, body = null) {
 }
 
 export default api;
+
+// ================= DOUBTS =================
+
+export const getDoubts = () => api.get("/doubts");
+
+export const createDoubt = (body) => api.post("/doubts", body);
+
+export const toggleDoubtUpvote = (id) =>
+  api.patch ? api.patch(`/doubts/${id}/upvote`) : request("PATCH", `/doubts/${id}/upvote`);
+
+
+// ================= ANSWERS =================
+
+export const addAnswer = (doubtId, body) =>
+  api.post(`/doubts/${doubtId}/answer`, body);
+
+export const toggleAnswerUpvote = (doubtId, answerId) =>
+  api.patch(`/doubts/${doubtId}/answers/${answerId}/upvote`);
+
+
+// ================= NOTIFICATIONS =================
+
+export const getNotifications = () => api.get("/notifications");
+
+export const markAllNotificationsRead = () =>
+  api.patch("/notifications/read-all");

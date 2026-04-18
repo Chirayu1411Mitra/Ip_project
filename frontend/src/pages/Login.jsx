@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-// Added 'User' to the imports
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
-import login_img from "../assets/login_img.png";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/authhook.js";
 
@@ -27,9 +26,12 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
+      console.log("Login: Attempting to login with email:", form.email);
       await login(form.email, form.password);
+      console.log("Login: Success, navigating to home");
       navigate("/");
     } catch (err) {
+      console.error("Login: Caught error:", err);
       const message =
         err?.response?.data?.message || "Invalid email or password";
       setError(message);
@@ -39,111 +41,109 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-[#F3F4F6] w-full min-h-screen flex items-center justify-center font-sans p-6">
-      <div className="flex w-full max-w-[900px] bg-white rounded-[32px] shadow-sm overflow-hidden p-4 min-h-[550px]">
-        <div className="hidden md:flex w-[45%] bg-[#E5E7EB] rounded-[24px] items-center justify-center p-8">
-          <img
-            src={login_img}
-            alt="Reading illustration"
-            className="w-full max-w-[280px] object-contain mix-blend-multiply opacity-80"
-            onError={(e) => {
-              e.target.src =
-                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='16'%3EBook Illustration%3C/text%3E%3C/svg%3E";
-            }}
-          />
+    <div className="bg-[#E9EEF9] w-full min-h-screen flex items-center justify-center font-sans p-4">
+      <div className="flex w-full max-w-[950px] bg-white rounded-[45px] shadow-xl overflow-hidden min-h-[600px]">
+        {/* LEFT SIDE (Animation) */}
+        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#F0F4FF] to-[#E9EEF9] items-center justify-center p-12">
+          <div className="w-full transform scale-110">
+            <DotLottieReact
+              src="https://lottie.host/4e633599-8d65-4d10-8d06-589aae5ac2af/lqy3MPxIK0.lottie"
+              loop
+              autoplay
+            />
+          </div>
         </div>
 
-        {/* RIGHT SIDE: Form Panel */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 lg:px-16">
-          <div className="w-full max-w-[320px] flex flex-col items-center">
-            {/* Profile Avatar Section */}
-            <div className="w-20 h-20 bg-[#FAF7F2] rounded-full flex items-center justify-center border border-[#F3EFE7] mb-4">
-              <User size={32} className="text-[#A39E93]" />
+        {/* RIGHT SIDE (Form) */}
+        <div className="w-full md:w-1/2 flex items-center justify-center p-8 sm:p-16">
+          <div className="w-full max-w-[340px] flex flex-col items-center">
+            <h2 className="text-3xl font-bold text-[#2D3748] mb-1">Login</h2>
+            <p className="text-gray-400 text-sm mb-8">Login to your account</p>
+
+            {/* Avatar Circle */}
+            <div className="w-24 h-24 bg-[#E9EEF9] rounded-full flex items-center justify-center mb-8 overflow-hidden relative">
+              <DotLottieReact
+                src="https://lottie.host/34ee98c2-4884-440d-bea8-4aed3476f528/DpStFqLUVX.lottie"
+                loop
+                autoplay
+              />
             </div>
 
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-[#1F2937] mb-1">Login</h2>
-              <p className="text-gray-500 text-sm">
-                Welcome back to your academic hub
-              </p>
-            </div>
-
+            {/* ── Error message ── */}
             {error && (
-              <div className="w-full mb-4 p-3 bg-red-50 text-red-500 text-xs rounded-xl text-center border border-red-100">
+              <div className="w-full mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 text-sm text-center">
                 {error}
               </div>
             )}
 
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
-              {/* Email Input */}
+              {/* Email */}
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
                 <input
                   name="email"
                   type="email"
-                  placeholder="Email"
                   value={form.email}
                   onChange={handleChange}
+                  placeholder="john.doe@example.com"
                   required
-                  className="w-full pl-11 pr-4 py-3 bg-[#F3F4F6] border-none rounded-xl outline-none text-sm text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-[#8B89E3]/20 transition-all"
+                  className="w-full pl-12 pr-4 py-3.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
                 />
               </div>
 
-              {/* Password Input */}
+              {/* Password */}
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <Lock className="text-gray-400 w-4 h-4" />
-                  <div className="w-[1px] h-4 bg-gray-300 ml-1"></div>
-                </div>
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password"
                   value={form.password}
                   onChange={handleChange}
+                  placeholder="••••••••"
                   required
-                  className="w-full pl-14 pr-11 py-3 bg-[#F3F4F6] border-none rounded-xl outline-none text-sm text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-[#8B89E3]/20 transition-all"
+                  className="w-full pl-12 pr-12 py-3.5 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#8B89E3]"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#7C7CC9]"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
-              {/* Forgot Password */}
               <div className="text-right">
                 <button
                   type="button"
-                  className="text-[11px] text-gray-400 hover:text-[#8B89E3] transition-colors"
+                  className="text-xs text-[#7C7CC9] font-bold hover:underline"
                 >
                   Forgot password?
                 </button>
               </div>
 
-              {/* Login Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#8B89E3] hover:bg-[#7A78D1] text-white font-semibold py-3 rounded-xl shadow-lg shadow-[#8B89E3]/20 transition-all active:scale-[0.98] disabled:opacity-70"
+                className="w-full bg-[#7C7CC9] hover:bg-[#6B6BB3] text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
-            {/* Footer Link */}
-            <div className="mt-8 text-center">
-              <p className="text-[13px] text-gray-500">
-                Don't have an account?{" "}
+            <div className="mt-10 text-center">
+              <p className="text-gray-500 text-sm font-medium">
+                Don't have an account?
+              </p>
+              <div className="w-full flex items-center justify-center gap-2 mt-2">
+                <div className="h-[1px] bg-gray-100 flex-grow"></div>
                 <Link
                   to="/register"
-                  className="text-[#8B89E3] font-bold hover:underline ml-1"
+                  className="text-[#7C7CC9] font-bold text-sm hover:underline"
                 >
                   Register
                 </Link>
-              </p>
+                <div className="h-[1px] bg-gray-100 flex-grow"></div>
+              </div>
             </div>
           </div>
         </div>

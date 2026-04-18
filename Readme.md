@@ -64,7 +64,7 @@ Create a `.env` file in `backend/` with sample (fake) values:
 Port=5000
 FRONTEND_URL=http://localhost:5173
 
-MONGODB_URL=mongodb+srv://demo_user:demo_pass_123@demo-cluster.mongodb.net/uconnect_dev?retryWrites=true&w=majority
+MONGODB_URL=your_mongodb_url
 
 JWT_SECRET=uconnect_demo_jwt_secret_change_me
 NODE_ENV=development

@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import connectDB from "./db/config.js";
 import { applyGlobalMiddlewares } from "./middlewares/globalMiddlewares.js";
 import authRoutes from "./routes/authRoutes.js";
+import notesRoutes from "./routes/notesRoutes.js";
 import doubtRoutes from './routes/doubtsRoutes.js';
 import notificationRoutes from "./routes/notificationRoutes.js";
 
@@ -47,6 +48,7 @@ applyGlobalMiddlewares(app);
 
 // routes
 app.use("/api/auth", authRoutes);
+app.use("/api/notes", notesRoutes);
 app.use("/api/doubts", doubtRoutes);
 app.use("/api/notifications", notificationRoutes);
 

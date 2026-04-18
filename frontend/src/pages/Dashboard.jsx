@@ -1,48 +1,102 @@
 import React from "react";
-import { FileText, HelpCircle, MessageSquare, Download, TrendingUp } from "lucide-react";
+import { BookOpen, HelpCircle, Users, Clock, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/authhook";
 
-const StatCard = ({ label, value, icon, color }) => (
-  <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm flex flex-col gap-4">
-    <div className="flex justify-between items-start">
-      <div className={`p-3 rounded-2xl ${color} bg-opacity-10 text-opacity-100`}>{icon}</div>
-      <TrendingUp size={18} className="text-green-500" />
-    </div>
-    <div>
-      <h3 className="text-3xl font-bold text-gray-800">{value}</h3>
-      <p className="text-sm text-gray-400 font-medium">{label}</p>
-    </div>
-  </div>
-);
+const cards = [
+  {
+    label: "Notes Library",
+    desc: "Browse and download study materials",
+    icon: <BookOpen size={22} />,
+    to: "/notes",
+    color: "#7c3aed",
+    bg: "#f5f3ff",
+  },
+  {
+    label: "Doubts Forum",
+    desc: "Ask questions, get answers from peers",
+    icon: <HelpCircle size={22} />,
+    to: "/doubts",
+    color: "#059669",
+    bg: "#ecfdf5",
+  },
+  {
+    label: "Study Groups",
+    desc: "Collaborate with your classmates",
+    icon: <Users size={22} />,
+    to: "/groups",
+    color: "#2563eb",
+    bg: "#eff6ff",
+  },
+  {
+    label: "Deadlines",
+    desc: "Track your assignments & exams",
+    icon: <Clock size={22} />,
+    to: "/deadlines",
+    color: "#d97706",
+    bg: "#fffbeb",
+  },
+];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">Welcome back! 👋</h1>
-        <p className="text-gray-400 mt-1 font-medium">Here's what's happening with your studies today.</p>
-      </div>
-
-      {/* Top 4 Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard label="Notes Uploaded" value="12" icon={<FileText />} color="text-green-500 bg-green-500" />
-        <StatCard label="Doubts Asked" value="8" icon={<HelpCircle />} color="text-purple-500 bg-purple-500" />
-        <StatCard label="Answers Given" value="24" icon={<MessageSquare />} color="text-pink-500 bg-pink-500" />
-        <StatCard label="Downloads Received" value="156" icon={<Download />} color="text-orange-500 bg-orange-500" />
-      </div>
-
-      {/* Bottom Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
-          <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
-          {/* List items go here */}
-          <div className="space-y-6">
-             <p className="text-gray-400 text-sm">No recent activity found.</p>
+    <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Hero */}
+        <div
+          className="rounded-3xl p-8 mb-8 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+        >
+          <div className="relative z-10">
+            <p className="text-purple-200 text-sm font-medium mb-1">Welcome back 👋</p>
+            <h1 className="text-3xl font-bold mb-2">
+              {user?.name ? `Hi, ${user.name.split(" ")[0]}!` : "Hi there!"}
+            </h1>
+            <p className="text-purple-200 text-sm">
+              Ready to learn and collaborate today?
+            </p>
           </div>
+          {/* Decorative circles */}
+          <div
+            className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-10"
+            style={{ background: "white" }}
+          />
+          <div
+            className="absolute -right-4 -bottom-14 w-36 h-36 rounded-full opacity-10"
+            style={{ background: "white" }}
+          />
         </div>
-        
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
-          <h2 className="text-xl font-bold mb-6">Upcoming Deadlines</h2>
-          <div className="text-center text-gray-400 text-sm py-10">All clear for now!</div>
+
+        {/* Feature cards */}
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {cards.map(({ label, desc, icon, to, color, bg }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className="text-left bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all group"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                style={{ background: bg, color }}
+              >
+                {icon}
+              </div>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">{label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                </div>
+                <ArrowRight
+                  size={16}
+                  className="text-gray-300 group-hover:text-purple-500 transition-colors mt-0.5 flex-shrink-0"
+                />
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </div>

@@ -1,13 +1,16 @@
 import React from 'react'
 import AppRoute from './Router/AppRoute'
 import { AuthProvider } from './context/AuthContext'
+import { NotifProvider } from './context/NotifContext'
 
-  const App = () => {
-    return (
-      <AuthProvider>
+const App = () => {
+  return (
+    <AuthProvider>
+      <NotifProvider>
         <AppRoute />
-      </AuthProvider>
-    )
+      </NotifProvider>
+    </AuthProvider>
+  )
 }
 
 export default App

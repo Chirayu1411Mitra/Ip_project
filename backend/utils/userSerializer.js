@@ -1,4 +1,3 @@
-// Helper function to convert user document to JSON with binary conversion
 export const serializeUser = (user) => {
   let avatarURL = null;
   if (user.profileImage && user.profileImage.data) {
@@ -6,14 +5,29 @@ export const serializeUser = (user) => {
     avatarURL = `data:${user.profileImage.contentType};base64,${base64}`;
   }
 
-  return {
+  const base = {
     _id: user._id,
     name: user.name,
     email: user.email,
+    bio: user.bio,
+    avatarURL: avatarURL || user.avatarURL || null,
+    role: user.role || "student",
+    bannedUntil: user.bannedUntil || null,
+    banReason: user.banReason || "",
+  };
+
+  if (user.role === "faculty") {
+    return {
+      ...base,
+      department: user.department,
+      designation: user.designation || "Faculty",
+    };
+  }
+
+  return {
+    ...base,
     rollNo: user.rollNo,
     semester: user.semester,
     branch: user.branch,
-    bio: user.bio,
-    avatarURL: avatarURL,
   };
 };

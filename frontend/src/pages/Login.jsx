@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/authhook.js";
 
@@ -10,31 +10,29 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [banInfo, setBanInfo] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setBanInfo(null);
     setLoading(true);
     try {
-      console.log("Login: Attempting to login with email:", form.email);
       await login(form.email, form.password);
-      console.log("Login: Success, navigating to home");
       navigate("/");
     } catch (err) {
-      console.error("Login: Caught error:", err);
-      const message =
-        err?.response?.data?.message || "Invalid email or password";
-      setError(message);
+      const data = err?.response?.data;
+      if (data?.banned) {
+        setBanInfo(data);
+      } else {
+        setError(data?.message || "Invalid email or password");
+      }
     } finally {
       setLoading(false);
     }
@@ -43,7 +41,7 @@ const Login = () => {
   return (
     <div className="bg-[#E9EEF9] w-full min-h-screen flex items-center justify-center font-sans p-4">
       <div className="flex w-full max-w-[950px] bg-white rounded-[45px] shadow-xl overflow-hidden min-h-[600px]">
-        {/* LEFT SIDE (Animation) */}
+        {/* LEFT SIDE */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#F0F4FF] to-[#E9EEF9] items-center justify-center p-12">
           <div className="w-full transform scale-110">
             <DotLottieReact
@@ -54,13 +52,12 @@ const Login = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE (Form) */}
+        {/* RIGHT SIDE */}
         <div className="w-full md:w-1/2 flex items-center justify-center p-8 sm:p-16">
           <div className="w-full max-w-[340px] flex flex-col items-center">
             <h2 className="text-3xl font-bold text-[#2D3748] mb-1">Login</h2>
             <p className="text-gray-400 text-sm mb-8">Login to your account</p>
 
-            {/* Avatar Circle */}
             <div className="w-24 h-24 bg-[#E9EEF9] rounded-full flex items-center justify-center mb-8 overflow-hidden relative">
               <DotLottieReact
                 src="https://lottie.host/34ee98c2-4884-440d-bea8-4aed3476f528/DpStFqLUVX.lottie"
@@ -69,7 +66,32 @@ const Login = () => {
               />
             </div>
 
-            {/* ── Error message ── */}
+            {/* Ban error */}
+            {banInfo && (
+              <div className="w-full mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-2xl">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle
+                    size={16}
+                    className="text-red-500 shrink-0 mt-0.5"
+                  />
+                  <div>
+                    <p className="text-red-600 text-sm font-semibold">
+                      Account Suspended
+                    </p>
+                    <p className="text-red-500 text-xs mt-0.5">
+                      {banInfo.message}
+                    </p>
+                    {banInfo.banReason && (
+                      <p className="text-red-400 text-xs mt-1 italic">
+                        Reason: {banInfo.banReason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Regular error */}
             {error && (
               <div className="w-full mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-2xl text-red-500 text-sm text-center">
                 {error}
@@ -77,7 +99,6 @@ const Login = () => {
             )}
 
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
-              {/* Email */}
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
                 <input
@@ -91,7 +112,6 @@ const Login = () => {
                 />
               </div>
 
-              {/* Password */}
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
                 <input
@@ -112,15 +132,6 @@ const Login = () => {
                 </button>
               </div>
 
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="text-xs text-[#7C7CC9] font-bold hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -130,19 +141,26 @@ const Login = () => {
               </button>
             </form>
 
-            <div className="mt-10 text-center">
-              <p className="text-gray-500 text-sm font-medium">
-                Don't have an account?
-              </p>
-              <div className="w-full flex items-center justify-center gap-2 mt-2">
-                <div className="h-[1px] bg-gray-100 flex-grow"></div>
-                <Link
-                  to="/register"
-                  className="text-[#7C7CC9] font-bold text-sm hover:underline"
-                >
-                  Register
-                </Link>
-                <div className="h-[1px] bg-gray-100 flex-grow"></div>
+            <div className="mt-8 text-center w-full space-y-3">
+              <div>
+                <p className="text-gray-500 text-sm font-medium">
+                  Don't have an account?
+                </p>
+                <div className="flex items-center justify-center gap-3 mt-2">
+                  <Link
+                    to="/register"
+                    className="text-[#7C7CC9] font-bold text-sm hover:underline"
+                  >
+                    Student Register
+                  </Link>
+                  <span className="text-gray-200">|</span>
+                  <Link
+                    to="/register-faculty"
+                    className="text-blue-600 font-bold text-sm hover:underline"
+                  >
+                    Faculty Register
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

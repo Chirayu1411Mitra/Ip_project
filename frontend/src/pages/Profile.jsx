@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import EditProfile from "../components/Profile/updateProfile";
+import FacultyProfile from "../components/Profile/FacultyProfile";
 import { getProfilePictureSrc } from "../utils/profilePicture";
 import profileService from "../services/profileServices";
 
@@ -98,6 +99,11 @@ const Profile = () => {
     );
   }
 
+  // If faculty user, show faculty profile
+  if (user.role === "faculty") {
+    return <FacultyProfile user={user} loading={loading} />;
+  }
+
   // If editing, show the Edit Profile form
   if (isEditing) {
     return <EditProfile onCancel={() => setIsEditing(false)} />;
@@ -129,7 +135,7 @@ const Profile = () => {
                 className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shrink-0">
                 {getInitials(user?.name)}
               </div>
             )}
@@ -176,7 +182,7 @@ const Profile = () => {
           {/* Edit Profile Button - Full width on mobile */}
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full sm:w-auto mt-2 sm:mt-0 justify-center bg-blue-500 text-white px-6 py-2.5 sm:py-2 rounded-xl sm:rounded-full font-semibold flex items-center gap-2 hover:bg-blue-600 transition shrink-0"
+            className="w-full sm:w-auto mt-2 sm:mt-0 justify-center bg-purple-500 text-white px-6 py-2.5 sm:py-2 rounded-xl sm:rounded-full font-semibold flex items-center gap-2 hover:bg-purple-600 transition shrink-0"
           >
             <Edit2 size={18} />
             Edit Profile

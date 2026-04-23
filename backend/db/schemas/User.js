@@ -20,21 +20,28 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     rollNo: {
       type: String,
-      required: true,
+      required: function () {
+        return this.role === "student";
+      },
       unique: true,
+      sparse: true, // allow null for faculty
       uppercase: true,
       trim: true,
       index: true,
     },
     semester: {
       type: Number,
-      required: true,
       min: 1,
       max: 8,
     },
     branch: {
       type: String,
-      required: true,
+    },
+    department: {
+      type: String, // for faculty
+    },
+    designation: {
+      type: String, // e.g. "Professor", "Assistant Professor"
     },
     bio: {
       type: String,
@@ -47,6 +54,22 @@ const userSchema = new mongoose.Schema(
     profileImage: {
       data: Buffer,
       contentType: String,
+    },
+    // ROLE SYSTEM
+    role: {
+      type: String,
+      enum: ["student", "faculty"],
+      default: "student",
+      index: true,
+    },
+    // MODERATION
+    bannedUntil: {
+      type: Date,
+      default: null,
+    },
+    banReason: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true },

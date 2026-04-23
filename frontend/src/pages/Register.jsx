@@ -1,25 +1,34 @@
 import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { User, Mail, Lock, Hash, BookOpen, GraduationCap, Eye, EyeOff } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  Hash,
+  BookOpen,
+  GraduationCap,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/authhook.js";
 
 const branches = ["CSE", "ECE", "ME", "CE", "EE", "IT"];
 
 const Register = () => {
-  const { register }  = useAuth();
-  const navigate      = useNavigate();
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]               = useState("");
-  const [loading, setLoading]           = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    name:     "",
-    email:    "",
+    name: "",
+    email: "",
     password: "",
-    rollNo:   "",
-    branch:   "CSE",
+    rollNo: "",
+    branch: "CSE",
     semester: "1",
   });
 
@@ -31,10 +40,12 @@ const Register = () => {
     setError("");
     setLoading(true);
     try {
-      await register(form);   // calls AuthContext → authService → /api/auth/register
-      navigate("/");          // redirect to dashboard on success
+      await register(form); // calls AuthContext → authService → /api/auth/register
+      navigate("/"); // redirect to dashboard on success
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Try again.");
+      setError(
+        err.response?.data?.message || "Registration failed. Try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -42,7 +53,6 @@ const Register = () => {
   return (
     <div className="bg-[#E9EEF9] w-full min-h-screen flex items-center justify-center font-sans p-4">
       <div className="flex w-full max-w-[950px] bg-white rounded-[45px] shadow-xl overflow-hidden min-h-[650px] flex-row-reverse">
-        
         {/* RIGHT SIDE (Animation) */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#F0F4FF] to-[#E9EEF9] items-center justify-center p-12">
           <div className="w-full transform scale-125">
@@ -68,7 +78,6 @@ const Register = () => {
             )}
 
             <form className="w-full space-y-3" onSubmit={handleSubmit}>
-
               {/* Name */}
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
@@ -141,7 +150,9 @@ const Register = () => {
                     className="w-full pl-9 pr-2 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none appearance-none text-gray-600 text-sm"
                   >
                     {branches.map((b) => (
-                      <option key={b} value={b}>{b}</option>
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -153,8 +164,10 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full pl-9 pr-2 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none appearance-none text-gray-600 text-sm"
                   >
-                    {[1,2,3,4,5,6,7,8].map((s) => (
-                      <option key={s} value={s}>Semester {s}</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>
+                        Semester {s}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -167,18 +180,21 @@ const Register = () => {
               >
                 {loading ? "Creating account..." : "Register"}
               </button>
-
             </form>
 
             <div className="mt-8 text-center w-full">
-              <p className="text-gray-500 text-sm font-medium">Already have an account?</p>
-              <Link to="/login" className="text-[#7C7CC9] font-bold text-sm hover:underline">
+              <p className="text-gray-500 text-sm font-medium">
+                Already have an account?
+              </p>
+              <Link
+                to="/login"
+                className="text-[#7C7CC9] font-bold text-sm hover:underline"
+              >
                 Login
               </Link>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

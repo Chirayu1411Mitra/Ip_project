@@ -8,22 +8,34 @@ import { serializeUser } from "../utils/userSerializer.js";
 
 const updateProfile = async (req, res) => {
   try {
-    const { bio, name } = req.body;
+    const { bio, name, designation, department } = req.body;
 
     if (!req.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Only allow updating bio and name
+    // Get user to check role
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Only allow updating bio and name for all users
     const updateData = {};
     if (name) updateData.name = name;
     if (bio !== undefined) updateData.bio = bio;
 
-    const user = await User.findByIdAndUpdate(req.userId, updateData, {
+    // For faculty, also allow designation and department
+    if (user.role === "faculty") {
+      if (designation) updateData.designation = designation;
+      if (department) updateData.department = department;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.userId, updateData, {
       new: true,
     }).select("-password");
 
-    if (!user) {
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -32,7 +44,7 @@ const updateProfile = async (req, res) => {
 
     return res.json({
       message: "Profile updated successfully",
-      user: serializeUser(user),
+      user: serializeUser(updatedUser),
     });
   } catch (err) {
     console.error("Update profile error:", err);

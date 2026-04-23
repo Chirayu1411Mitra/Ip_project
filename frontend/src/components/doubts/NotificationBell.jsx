@@ -21,13 +21,13 @@ const NotificationBell = () => {
   const handleToggle = () => {
     const next = !open;
     setOpen(next);
+    // Mark as read only when opening
     if (next && unreadCount > 0) markAllRead();
   };
 
   const handleClickNotification = (doubtId) => {
     setOpen(false);
     navigate("/doubts");
-    // scroll after navigation settles
     setTimeout(() => {
       const el = document.getElementById(`doubt-${doubtId}`);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -36,16 +36,19 @@ const NotificationBell = () => {
 
   return (
     <div ref={ref} className="relative">
+      {/* Bell Icon Button */}
       <button
         onClick={handleToggle}
-        // Scaled padding for mobile
-        className="relative p-1.5 sm:p-2 rounded-xl text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-all shrink-0"
+        className={`relative p-2 rounded-xl transition-all duration-200 shrink-0 ${
+          open 
+            ? "bg-purple-100 text-purple-700" 
+            : "text-gray-500 hover:bg-purple-50 hover:text-purple-600"
+        }`}
       >
-        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
         {unreadCount > 0 && (
           <span
-            // Scaled badge size and text for mobile
-            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center rounded-full text-white text-[9px] sm:text-[10px] font-bold px-1"
+            className="absolute top-1 right-1 min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center rounded-full text-white text-[9px] sm:text-[10px] font-bold border-2 border-white"
             style={{ background: "#7c3aed" }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -53,64 +56,81 @@ const NotificationBell = () => {
         )}
       </button>
 
+      {/* Dropdown Menu */}
       {open && (
         <div
-          // Adjusted width and right-offset for mobile to prevent touching screen edge
-          className="absolute right-[-20px] sm:right-0 top-10 sm:top-12 w-[300px] sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden origin-top-right"
-          style={{ maxHeight: "420px" }}
+          className="absolute right-0 mt-3 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-purple-50 z-50 overflow-hidden origin-top-right animate-in fade-in zoom-in duration-200"
+          style={{ 
+            maxHeight: "450px",
+            // Center on mobile, align right on desktop
+            position: window.innerWidth < 640 ? 'fixed' : 'absolute',
+            left: window.innerWidth < 640 ? '16px' : 'auto',
+            top: window.innerWidth < 640 ? '70px' : 'auto'
+          }}
         >
           {/* Header */}
-          <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-800">Notifications</h3>
+          <div className="px-4 py-3.5 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+            <h3 className="text-sm sm:text-base font-bold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
-              <span
-                className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full text-white font-medium"
-                style={{ background: "#7c3aed" }}
-              >
-                {unreadCount} new
+              <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full text-purple-700 bg-purple-100 font-bold uppercase tracking-wider">
+                {unreadCount} New
               </span>
             )}
           </div>
 
-          <div className="overflow-y-auto" style={{ maxHeight: "360px" }}>
+          {/* List Area */}
+          <div className="overflow-y-auto" style={{ maxHeight: "380px" }}>
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 sm:py-10 text-gray-400">
-                <Bell className="w-6 h-6 sm:w-8 sm:h-8 mb-2 opacity-30" />
-                <p className="text-xs sm:text-sm">No notifications yet</p>
+              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                  <Bell className="w-6 h-6 opacity-20" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium">All caught up!</p>
               </div>
             ) : (
-              notifications.map((n) => (
-                <button
-                  key={n._id}
-                  onClick={() => handleClickNotification(n.doubt?._id)}
-                  className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 border-b border-gray-50 hover:bg-purple-50 transition-colors flex gap-2.5 sm:gap-3 items-start"
-                  style={{ background: n.isRead ? "white" : "#f5f3ff" }}
-                >
-                  {/* Avatar dot */}
-                  <div
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold"
-                    style={{ background: "linear-gradient(135deg,#7c3aed,#a78bfa)" }}
+              <div className="divide-y divide-gray-50">
+                {notifications.map((n) => (
+                  <button
+                    key={n._id}
+                    onClick={() => handleClickNotification(n.doubt?._id)}
+                    className="w-full text-left px-4 py-4 hover:bg-purple-50/50 transition-colors flex gap-3 items-start"
+                    style={{ background: n.isRead ? "white" : "#fdfcff" }}
                   >
-                    {(n.sender?.name?.[0] ?? "?").toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] sm:text-xs text-gray-700 leading-snug">
-                      <span className="font-semibold">{n.sender?.name ?? "Someone"}</span>
-                      {" answered your doubt"}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
-                      "{n.doubt?.question ?? "your question"}"
-                    </p>
-                    {!n.isRead && (
-                      <span
-                        className="inline-block mt-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"
-                        style={{ background: "#7c3aed" }}
-                      />
-                    )}
-                  </div>
-                </button>
-              ))
+                    {/* Avatar */}
+                    <div
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                      style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}
+                    >
+                      {(n.sender?.name?.[0] ?? "?").toUpperCase()}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] sm:text-sm text-gray-800 leading-tight">
+                        <span className="font-bold text-gray-900">{n.sender?.name ?? "User"}</span>
+                        {" replied to your doubt"}
+                      </p>
+                      <p className="text-[11px] sm:text-xs text-purple-500 mt-1 italic truncate font-medium">
+                        {n.doubt?.question ?? "View details..."}
+                      </p>
+                      {!n.isRead && (
+                        <div className="mt-2 flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                          <span className="text-[10px] font-bold text-purple-600 uppercase">New</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
+          </div>
+          
+          {/* Footer (Optional) */}
+          <div className="p-2 border-t border-gray-50 bg-gray-50/50 text-center">
+             <button className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-purple-600 transition-colors">
+               Close Panel
+             </button>
           </div>
         </div>
       )}

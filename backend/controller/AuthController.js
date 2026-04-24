@@ -39,6 +39,9 @@ const login = async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
+    // Update lastActive on login
+    await User.findByIdAndUpdate(user._id, { lastActive: new Date() });
+
     res.json({ user: getUserJSON(user) });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });

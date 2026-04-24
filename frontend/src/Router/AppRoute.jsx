@@ -1,5 +1,8 @@
 import React from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/authhook"; // Ensure this is imported
+
+// ... other imports
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import RegisterFaculty from "../pages/RegisterFaculty";
@@ -11,41 +14,51 @@ import Dashboard from "../pages/Dashboard";
 import NotesPage from "../pages/NotesPage";
 import Profile from "../pages/Profile";
 import NoteDetail from "../pages/NoteDetail";
-import { AuthProvider } from "../context/AuthContext";
 import DoubtPage from "../pages/DoubtPage";
 
 const AppRoute = () => {
+  const { user } = useAuth(); // Access user role here
+
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/register-faculty" element={<RegisterFaculty />} />
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/register-faculty" element={<RegisterFaculty />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/notes" element={<NotesPage />} />
-              <Route path="/notes/:id" element={<NoteDetail />} />
-              <Route path="/doubts" element={<DoubtPage />} />
-              {/* <Route path="/doubts/:id"    element={<DoubtDetail />} />
-            <Route path="/groups"        element={<StudyGroups />} />
-            <Route path="/groups/:id"    element={<GroupChat />} />
-            <Route path="/deadlines"     element={<Deadlines />} /> */}
-              <Route path="/profile" element={<Profile />} />
+        {/* Authenticated Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            
+            {/* 1. ROLE-BASED ROOT REDIRECT */}
+            <Route 
+              path="/" 
+              element={
+                user?.role === "faculty" 
+                  ? <Navigate to="/faculty" replace /> 
+                  : <Dashboard />
+              } 
+            />
 
-              {/* Faculty-only routes */}
-              <Route element={<FacultyRoute />}>
-                <Route path="/faculty" element={<FacultyDashboard />} />
-              </Route>
+            {/* Shared Routes */}
+            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/notes/:id" element={<NoteDetail />} />
+            <Route path="/doubts" element={<DoubtPage />} />
+            <Route path="/profile" element={<Profile />} />
+
+            {/* 2. FACULTY SPECIFIC ROUTES */}
+            <Route element={<FacultyRoute />}>
+              <Route path="/faculty" element={<FacultyDashboard />} />
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+          </Route>
+        </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

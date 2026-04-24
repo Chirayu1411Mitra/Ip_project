@@ -2,6 +2,7 @@ import Announcement from "../db/schemas/Announcement.js";
 import User from "../db/schemas/User.js";
 import Note from "../db/schemas/Note.js";
 import Doubt from "../db/schemas/Doubt.js";
+import { uploadToS3, deleteFromS3 } from "../utils/s3.js";
 
 // POST /faculty/announcements
 export const createAnnouncement = async (req, res) => {
@@ -11,11 +12,32 @@ export const createAnnouncement = async (req, res) => {
       return res.status(400).json({ message: "Title and content required" });
     }
 
+    const files = [];
+
+    // Handle file uploads if files are present
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const { url, key } = await uploadToS3(file.buffer, file.originalname, file.mimetype);
+          files.push({
+            url,
+            key,
+            name: file.originalname,
+            size: file.size,
+          });
+        } catch (err) {
+          console.error("S3 upload error:", err);
+          return res.status(500).json({ message: "Failed to upload file", error: err.message });
+        }
+      }
+    }
+
     const announcement = await Announcement.create({
       title,
       content,
       priority: priority || "normal",
       postedBy: req.userId,
+      files,
     });
 
     await announcement.populate("postedBy", "name designation department");
@@ -52,6 +74,18 @@ export const deleteAnnouncement = async (req, res) => {
         .json({ message: "Only the author can delete this" });
     }
 
+    // Delete files from S3
+    if (ann.files && ann.files.length > 0) {
+      for (const file of ann.files) {
+        try {
+          await deleteFromS3(file.key);
+        } catch (err) {
+          console.error("Failed to delete file from S3:", err);
+          // Continue with deletion even if file deletion fails
+        }
+      }
+    }
+
     await Announcement.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted successfully" });
   } catch (err) {
@@ -62,6 +96,8 @@ export const deleteAnnouncement = async (req, res) => {
 // GET /faculty/students  — all student activity overview
 export const getStudentActivity = async (req, res) => {
   try {
+    console.log("getStudentActivity called");
+    
     const [students, recentNotes, recentDoubts] = await Promise.all([
       User.find({ role: "student" })
         .select("-password -profileImage")
@@ -75,6 +111,15 @@ export const getStudentActivity = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(20),
     ]);
+
+    console.log("Retrieved data - students:", students.length, "notes:", recentNotes.length, "doubts:", recentDoubts.length);
+
+    // Count students active in the last 30 minutes
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const activeStudentsCount = await User.countDocuments({
+      role: "student",
+      lastActive: { $gte: thirtyMinutesAgo },
+    });
 
     // Aggregate per-student stats
     const studentIds = students.map((s) => s._id);
@@ -119,27 +164,41 @@ export const getStudentActivity = async (req, res) => {
       joinedAt: s.createdAt,
     }));
 
-    res.json({ students: enrichedStudents, recentNotes, recentDoubts });
+    console.log("getStudentActivity completed successfully");
+
+    res.json({ students: enrichedStudents, recentNotes, recentDoubts, activeStudentsCount });
   } catch (err) {
+    console.error("getStudentActivity error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// GET /faculty/profile-stats  (own stats as faculty)
+// GET /faculty/stats  (own stats as faculty)
 export const facultyStats = async (req, res) => {
   try {
-    const [notesCount, announcementsCount, studentsCount] = await Promise.all([
+    console.log("facultyStats called for userId:", req.userId);
+    
+    const [notesCount, announcementsCount, answersCount] = await Promise.all([
       Note.countDocuments({ uploadedBy: req.userId }),
       Announcement.countDocuments({ postedBy: req.userId }),
-      User.countDocuments({ role: "student" }),
+      Doubt.aggregate([
+        { $unwind: "$answers" },
+        { $match: { "answers.user": req.userId } },
+        { $count: "total" },
+      ]),
     ]);
 
+    const doubtsResolved = answersCount.length > 0 ? answersCount[0].total : 0;
+
+    console.log("Faculty stats retrieved:", { notesCount, announcementsCount, doubtsResolved });
+    
     res.json({
       notesUploaded: notesCount,
       announcementsPosted: announcementsCount,
-      totalStudents: studentsCount,
+      answersGiven: doubtsResolved,
     });
   } catch (err) {
+    console.error("Faculty stats error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };

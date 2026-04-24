@@ -25,7 +25,6 @@ const studentLinks = [
 
 const facultyLinks = [
   { to: "/", label: "Dashboard", icon: <Home size={18} /> },
-  { to: "/faculty", label: "Faculty Portal", icon: <GraduationCap size={18} /> },
   { to: "/notes", label: "Notes", icon: <BookOpen size={18} /> },
   { to: "/doubts", label: "Doubts", icon: <HelpCircle size={18} /> },
   { to: "/profile", label: "Profile", icon: <UserCircle size={18} /> },
@@ -68,11 +67,11 @@ const Sidebar = ({ onClose }) => {
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: isFaculty ? "linear-gradient(135deg,#1d4ed8,#2563eb)" : "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+            style={{ background: isFaculty ? "linear-gradient(135deg,#7c3aed,#5b21b6)" : "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
           >
             {isFaculty ? <GraduationCap size={18} color="white" /> : <BookOpen size={18} color="white" />}
           </div>
-          <span className="text-xl font-bold text-gray-900">CampusConnect</span>
+          <span className="text-xl font-bold text-gray-900">UConnect</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="md:hidden p-1.5 -mr-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -83,8 +82,8 @@ const Sidebar = ({ onClose }) => {
 
       {/* Faculty role badge */}
       {isFaculty && (
-        <div className="mx-2 mb-4 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100">
-          <p className="text-xs font-semibold text-blue-700 flex items-center gap-1.5">
+        <div className="mx-2 mb-4 px-3 py-2 bg-purple-50 rounded-xl border border-purple-100">
+          <p className="text-xs font-semibold text-grey-100 flex items-center gap-1.5">
             <GraduationCap size={13} />
             {user?.designation || "Faculty"} · {user?.department}
           </p>
@@ -107,7 +106,7 @@ const Sidebar = ({ onClose }) => {
                 }
                 style={({ isActive }) =>
                   isActive
-                    ? { background: isFaculty ? "linear-gradient(135deg,#1d4ed8,#2563eb)" : "linear-gradient(135deg,#7c3aed,#6d28d9)" }
+                    ? { background: isFaculty ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "linear-gradient(135deg,#7c3aed,#6d28d9)" }
                     : {}
                 }
               >
@@ -120,14 +119,14 @@ const Sidebar = ({ onClose }) => {
       </nav>
 
       {/* Quick Stats */}
-      <div className="mt-8 rounded-2xl p-4 shrink-0" style={{ background: isFaculty ? "#eff6ff" : "#f5f3ff" }}>
-        <h2 className={`text-xs uppercase tracking-wider font-semibold mb-3 ${isFaculty ? "text-blue-400" : "text-purple-400"}`}>
+      <div className="mt-8 rounded-2xl p-4 shrink-0" style={{ background: isFaculty ? "#f5f3ff" : "#f5f3ff" }}>
+        <h2 className={`text-xs uppercase tracking-wider font-semibold mb-3 ${isFaculty ? "text-purple-400" : "text-purple-400"}`}>
           Quick Stats
         </h2>
         <ul className="text-sm space-y-2 text-gray-700">
           <li className="flex justify-between">
             <span>Notes Shared</span>
-            <strong className={isFaculty ? "text-blue-600" : "text-purple-600"}>{stats.notesUploaded}</strong>
+            <strong className={isFaculty ? "text-purple-600" : "text-purple-600"}>{stats.notesUploaded}</strong>
           </li>
           {!isFaculty && (
             <li className="flex justify-between">
@@ -137,7 +136,7 @@ const Sidebar = ({ onClose }) => {
           )}
           <li className="flex justify-between">
             <span>Answers Given</span>
-            <strong className={isFaculty ? "text-blue-600" : "text-purple-600"}>{stats.answersGiven}</strong>
+            <strong className={isFaculty ? "text-purple-600" : "text-purple-600"}>{stats.answersGiven}</strong>
           </li>
         </ul>
       </div>

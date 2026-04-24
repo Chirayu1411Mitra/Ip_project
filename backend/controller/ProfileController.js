@@ -126,6 +126,8 @@ const uploadPro = async (req, res) => {
 const dataStats = async (req, res) => {
   try {
     const userId = req.userId;
+    console.log("dataStats called for userId:", userId);
+    
     const user = await User.findById(userId).select("_id");
 
     if (!user) {
@@ -141,11 +143,14 @@ const dataStats = async (req, res) => {
           { $group: { _id: null, total: { $sum: "$downloads" } } },
         ]),
         Doubt.aggregate([
+          { $match: { answers: { $exists: true, $ne: [] } } },
           { $unwind: "$answers" },
           { $match: { "answers.user": user._id } },
           { $count: "total" },
         ]),
       ]);
+
+    console.log("Data stats:", { notesUploaded, doubtsAsked, answersGiven: answersGivenAgg[0]?.total ?? 0 });
 
     res.json({
       notesUploaded,

@@ -8,6 +8,10 @@ export const createDoubt = async (req, res) => {
     if (!question) return res.status(400).json({ message: "Question is required" });
 
     const doubt = await Doubt.create({ user: req.userId, question });
+    
+    // Populate user data before sending response
+    await doubt.populate("user", "name role");
+    
     res.status(201).json(doubt);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

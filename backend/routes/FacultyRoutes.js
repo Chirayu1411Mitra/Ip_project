@@ -1,6 +1,7 @@
 import express from "express";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { facultyOnly } from "../middlewares/facultyMiddleware.js";
+import announcementUpload from "../middlewares/announcementUploadMiddleware.js";
 import {
   createAnnouncement,
   getAnnouncements,
@@ -16,6 +17,7 @@ facultyRouter.get("/announcements", getAnnouncements);
 facultyRouter.post(
   "/announcements",
   authMiddleware,
+  announcementUpload.array("files", 10),
   facultyOnly,
   createAnnouncement,
 );

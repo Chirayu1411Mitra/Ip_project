@@ -1,14 +1,14 @@
 @echo off
 echo ========================================
-echo    Starting CampusConnect
+echo    Starting UConnect
 echo ========================================
 echo.
 
 echo [1/2] Starting Backend Server...
-start "CampusConnect - Backend" cmd /k "cd /d %~dp0backend && npm run dev"
+start "UConnect - Backend" cmd /k "cd /d %~dp0backend && npm run start"
 
 echo [2/2] Starting Frontend Dev Server...
-start "CampusConnect - Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
+start "UConnect - Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
 echo.
 echo ========================================

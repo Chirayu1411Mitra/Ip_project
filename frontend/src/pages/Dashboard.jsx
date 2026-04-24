@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, HelpCircle, Users, Clock, ArrowRight } from "lucide-react";
+import { BookOpen, HelpCircle, Users, Clock, ArrowRight, Download, File, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/authhook";
 import StatCard from "../components/ui/StatCard";
 import profileService from "../services/profileServices";
+import facultyService from "../services/facultyService";
 
 const cards = [
   {
@@ -49,13 +50,18 @@ const Dashboard = () => {
     answersGiven: 0,
     downloadsReceived: 0,
   });
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
     let isActive = true;
 
     const loadStats = async () => {
       try {
-        const stats = await profileService.dataStats();
+        const [stats, annList] = await Promise.all([
+          profileService.dataStats(),
+          facultyService.getAnnouncements(),
+        ]);
+        
         if (!isActive) return;
 
         setProfileStats({
@@ -64,6 +70,8 @@ const Dashboard = () => {
           answersGiven: stats.answersGiven ?? 0,
           downloadsReceived: stats.downloadsReceived ?? 0,
         });
+        
+        setAnnouncements(annList || []);
       } catch (error) {
         if (isActive) {
           setProfileStats({
@@ -72,6 +80,7 @@ const Dashboard = () => {
             answersGiven: 0,
             downloadsReceived: 0,
           });
+          setAnnouncements([]);
         }
       }
     };
@@ -144,6 +153,86 @@ const Dashboard = () => {
             color="text-orange-500 bg-orange-500"
           />
         </div>
+
+        {/* Announcements Section */}
+        {announcements.length > 0 && (
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                <Megaphone size={20} />
+              </div>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-700">
+                Important Announcements
+              </h2>
+            </div>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {announcements.slice(0, 5).map((ann) => (
+                <div
+                  key={ann._id}
+                  className={`bg-white rounded-2xl border-l-4 shadow-sm p-4 sm:p-5 ${
+                    ann.priority === "high"
+                      ? "border-l-red-500 bg-red-50/30"
+                      : ann.priority === "normal"
+                      ? "border-l-purple-500 bg-purple-50/30"
+                      : "border-l-gray-400 bg-gray-50/30"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900 truncate text-sm sm:text-base">
+                          {ann.title}
+                        </p>
+                        {ann.priority === "high" && (
+                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex-shrink-0">
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
+                        {ann.content}
+                      </p>
+                      <p className="text-xs text-gray-400 mb-2">
+                        Posted by: {ann.postedBy?.name} on{" "}
+                        {new Date(ann.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                      
+                      {/* Files Section */}
+                      {ann.files && ann.files.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <p className="text-xs font-semibold text-gray-600 mb-2">
+                            Attachments ({ann.files.length})
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {ann.files.map((file, idx) => (
+                              <a
+                                key={idx}
+                                href={file.url}
+                                download={file.name}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors text-xs font-medium text-gray-700"
+                              >
+                                <File size={14} />
+                                <span className="truncate max-w-[120px]">{file.name}</span>
+                                <Download size={12} className="flex-shrink-0" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Feature cards */}
         <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">

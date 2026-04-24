@@ -22,6 +22,29 @@ const announcementSchema = new mongoose.Schema(
       enum: ["low", "normal", "high"],
       default: "normal",
     },
+    files: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        key: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        size: {
+          type: Number,
+        },
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

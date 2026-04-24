@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 
 import connectDB from "./db/config.js";
 import { applyGlobalMiddlewares } from "./middlewares/globalMiddlewares.js";
+import { trackActivity } from "./middlewares/activityMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import notesRoutes from "./routes/notesRoutes.js";
 import doubtRoutes from "./routes/doubtsRoutes.js";
@@ -50,12 +51,12 @@ const cacheControlMiddleware = (req, res, next) => {
 };
 
 app.use("/api/uploads", cacheControlMiddleware, express.static(path.join(__dirname, "uploads")));
-app.use("/api/auth", authRoutes);
-app.use("/api/notes", notesRoutes);
-app.use("/api/doubts", doubtRoutes);
-app.use("/api/profile", ProfileRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/faculty", facultyRoutes);
+app.use("/api/auth", trackActivity, authRoutes);
+app.use("/api/notes", trackActivity, notesRoutes);
+app.use("/api/doubts", trackActivity, doubtRoutes);
+app.use("/api/profile", trackActivity, ProfileRoutes);
+app.use("/api/notifications", trackActivity, notificationRoutes);
+app.use("/api/faculty", trackActivity, facultyRoutes);
 
 connectDB();
 

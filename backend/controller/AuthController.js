@@ -13,7 +13,9 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
 
     const user = await User.findOne({ email });
     if (!user)
@@ -26,7 +28,7 @@ const login = async (req, res) => {
     // Check ban
     if (user.bannedUntil && new Date() < new Date(user.bannedUntil)) {
       const daysLeft = Math.ceil(
-        (new Date(user.bannedUntil) - new Date()) / (1000 * 60 * 60 * 24)
+        (new Date(user.bannedUntil) - new Date()) / (1000 * 60 * 60 * 24),
       );
       return res.status(403).json({
         message: `Account suspended for ${daysLeft} more day${daysLeft !== 1 ? "s" : ""} due to policy violation.`,
@@ -52,14 +54,20 @@ const registerStudent = async (req, res) => {
   try {
     const { name, email, password, rollNo, semester, branch } = req.body;
     if (!name || !email || !password || !rollNo) {
-      return res.status(400).json({ message: "Please fill all required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
     }
 
     const emailExists = await User.findOne({ email });
-    if (emailExists) return res.status(400).json({ message: "Email already registered" });
+    if (emailExists)
+      return res.status(400).json({ message: "Email already registered" });
 
     const rollExists = await User.findOne({ rollNo });
-    if (rollExists) return res.status(400).json({ message: "Roll number already registered" });
+    if (rollExists)
+      return res
+        .status(400)
+        .json({ message: "Roll number already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
@@ -80,20 +88,26 @@ const registerStudent = async (req, res) => {
 
 const registerFaculty = async (req, res) => {
   try {
-    const { name, email, password, department, designation, facultyCode } = req.body;
+    const { name, email, password, department, designation, facultyCode } =
+      req.body;
 
     if (!name || !email || !password || !department) {
-      return res.status(400).json({ message: "Please fill all required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
     }
 
     // Simple faculty code verification (set FACULTY_INVITE_CODE in .env)
     const validCode = process.env.FACULTY_INVITE_CODE || "FACULTY2024";
     if (facultyCode !== validCode) {
-      return res.status(403).json({ message: "Invalid faculty registration code" });
+      return res
+        .status(403)
+        .json({ message: "Invalid faculty registration code" });
     }
 
     const emailExists = await User.findOne({ email });
-    if (emailExists) return res.status(400).json({ message: "Email already registered" });
+    if (emailExists)
+      return res.status(400).json({ message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
@@ -125,7 +139,9 @@ const getMe = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.json(getUserJSON(user));
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
@@ -135,13 +151,24 @@ const deleteAccount = async (req, res) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser) return res.status(404).json({ message: "User not found" });
+    if (!deletedUser)
+      return res.status(404).json({ message: "User not found" });
 
     clearTokenCookie(res);
     return res.json({ message: "Account deleted successfully" });
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
-export { login, register, registerStudent, registerFaculty, logout, getMe, deleteAccount };
+export {
+  login,
+  register,
+  registerStudent,
+  registerFaculty,
+  logout,
+  getMe,
+  deleteAccount,
+};

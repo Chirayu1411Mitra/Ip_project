@@ -50,7 +50,11 @@ const cacheControlMiddleware = (req, res, next) => {
   next();
 };
 
-app.use("/api/uploads", cacheControlMiddleware, express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/api/uploads",
+  cacheControlMiddleware,
+  express.static(path.join(__dirname, "uploads")),
+);
 app.use("/api/auth", trackActivity, authRoutes);
 app.use("/api/notes", trackActivity, notesRoutes);
 app.use("/api/doubts", trackActivity, doubtRoutes);

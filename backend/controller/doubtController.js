@@ -5,13 +5,14 @@ import { io } from "../server.js";
 export const createDoubt = async (req, res) => {
   try {
     const { question } = req.body;
-    if (!question) return res.status(400).json({ message: "Question is required" });
+    if (!question)
+      return res.status(400).json({ message: "Question is required" });
 
     const doubt = await Doubt.create({ user: req.userId, question });
-    
+
     // Populate user data before sending response
     await doubt.populate("user", "name role");
-    
+
     res.status(201).json(doubt);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -21,7 +22,8 @@ export const createDoubt = async (req, res) => {
 export const addAnswer = async (req, res) => {
   try {
     const { content } = req.body;
-    if (!content) return res.status(400).json({ message: "Answer content is required" });
+    if (!content)
+      return res.status(400).json({ message: "Answer content is required" });
 
     const doubt = await Doubt.findById(req.params.id);
     if (!doubt) return res.status(404).json({ message: "Doubt not found" });
@@ -61,7 +63,12 @@ export const toggleUpvote = async (req, res) => {
     else doubt.upvotes.push(userId);
 
     await doubt.save();
-    res.status(200).json({ message: alreadyUpvoted ? "Upvote removed" : "Upvoted", upvotes: doubt.upvotes.length });
+    res
+      .status(200)
+      .json({
+        message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
+        upvotes: doubt.upvotes.length,
+      });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -77,13 +84,20 @@ export const toggleAnswerUpvote = async (req, res) => {
     if (!answer) return res.status(404).json({ message: "Answer not found" });
 
     const userId = req.userId;
-    const alreadyUpvoted = answer.upvotes.some((id) => id.toString() === userId.toString());
+    const alreadyUpvoted = answer.upvotes.some(
+      (id) => id.toString() === userId.toString(),
+    );
 
     if (alreadyUpvoted) answer.upvotes.pull(userId);
     else answer.upvotes.push(userId);
 
     await doubt.save();
-    res.status(200).json({ message: alreadyUpvoted ? "Upvote removed" : "Upvoted", upvotes: answer.upvotes.length });
+    res
+      .status(200)
+      .json({
+        message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
+        upvotes: answer.upvotes.length,
+      });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

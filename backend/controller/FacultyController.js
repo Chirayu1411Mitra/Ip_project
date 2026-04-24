@@ -18,7 +18,11 @@ export const createAnnouncement = async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         try {
-          const { url, key } = await uploadToS3(file.buffer, file.originalname, file.mimetype);
+          const { url, key } = await uploadToS3(
+            file.buffer,
+            file.originalname,
+            file.mimetype,
+          );
           files.push({
             url,
             key,
@@ -27,7 +31,9 @@ export const createAnnouncement = async (req, res) => {
           });
         } catch (err) {
           console.error("S3 upload error:", err);
-          return res.status(500).json({ message: "Failed to upload file", error: err.message });
+          return res
+            .status(500)
+            .json({ message: "Failed to upload file", error: err.message });
         }
       }
     }
@@ -97,7 +103,7 @@ export const deleteAnnouncement = async (req, res) => {
 export const getStudentActivity = async (req, res) => {
   try {
     console.log("getStudentActivity called");
-    
+
     const [students, recentNotes, recentDoubts] = await Promise.all([
       User.find({ role: "student" })
         .select("-password -profileImage")
@@ -112,7 +118,14 @@ export const getStudentActivity = async (req, res) => {
         .limit(20),
     ]);
 
-    console.log("Retrieved data - students:", students.length, "notes:", recentNotes.length, "doubts:", recentDoubts.length);
+    console.log(
+      "Retrieved data - students:",
+      students.length,
+      "notes:",
+      recentNotes.length,
+      "doubts:",
+      recentDoubts.length,
+    );
 
     // Count students active in the last 30 minutes
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -166,7 +179,12 @@ export const getStudentActivity = async (req, res) => {
 
     console.log("getStudentActivity completed successfully");
 
-    res.json({ students: enrichedStudents, recentNotes, recentDoubts, activeStudentsCount });
+    res.json({
+      students: enrichedStudents,
+      recentNotes,
+      recentDoubts,
+      activeStudentsCount,
+    });
   } catch (err) {
     console.error("getStudentActivity error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
@@ -177,7 +195,7 @@ export const getStudentActivity = async (req, res) => {
 export const facultyStats = async (req, res) => {
   try {
     console.log("facultyStats called for userId:", req.userId);
-    
+
     const [notesCount, announcementsCount, answersCount] = await Promise.all([
       Note.countDocuments({ uploadedBy: req.userId }),
       Announcement.countDocuments({ postedBy: req.userId }),
@@ -190,8 +208,12 @@ export const facultyStats = async (req, res) => {
 
     const doubtsResolved = answersCount.length > 0 ? answersCount[0].total : 0;
 
-    console.log("Faculty stats retrieved:", { notesCount, announcementsCount, doubtsResolved });
-    
+    console.log("Faculty stats retrieved:", {
+      notesCount,
+      announcementsCount,
+      doubtsResolved,
+    });
+
     res.json({
       notesUploaded: notesCount,
       announcementsPosted: announcementsCount,

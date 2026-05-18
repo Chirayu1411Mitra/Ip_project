@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/authhook";
-import NotificationBell from "../doubts/NotificationBell";
-import { getProfilePictureSrc } from "../../utils/profilePicture";
+import NotificationBell from "../NotificationBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -15,71 +14,59 @@ const Header = () => {
     try {
       await logout();
       navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
+    } catch {
       setIsLoggingOut(false);
     }
   };
 
   const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
+    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "U";
-  const profilePictureSrc = getProfilePictureSrc(user);
 
   return (
-    // Adjusted height, padding, and gaps for mobile vs tablet/desktop
-    <div className="h-14 sm:h-16 w-full bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-6 shadow-sm gap-2 sm:gap-4">
+    <div className="h-16 w-full bg-white border-b border-gray-100 flex items-center justify-between px-6 shadow-sm">
       {/* Search */}
-      <div className="relative flex-1 max-w-[160px] sm:max-w-xs md:max-w-none md:w-80">
-        <span className="absolute inset-y-0 left-2 sm:left-3 flex items-center pointer-events-none">
-          <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+      <div className="relative w-80">
+        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-gray-400" />
         </span>
         <input
           type="text"
-          className="block w-full pl-8 sm:pl-10 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-gray-200 rounded-lg sm:rounded-xl bg-gray-50 placeholder-gray-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition"
-          placeholder="Search..."
+          className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition"
+          placeholder="Search notes, doubts, groups..."
         />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-        {/* Notification Bell from NotifContext */}
+      <div className="flex items-center gap-4">
         <NotificationBell />
 
-        {/* Avatar + name */}
-        <div className="flex items-center gap-2 pl-2 sm:pl-4 border-l border-gray-100">
-          {profilePictureSrc ? (
-            <img
-              src={profilePictureSrc}
-              alt={user?.name || "User"}
-              className="w-7 h-7 sm:w-9 sm:h-9 rounded-full object-cover border border-gray-100 shrink-0"
-            />
-          ) : (
-            <div
-              className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shrink-0"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
-            >
-              {initials}
-            </div>
-          )}
-          {/* Hide name on mobile, show on sm+ screens */}
-          <span className="hidden sm:block text-sm font-medium text-gray-700 truncate max-w-[100px] lg:max-w-[150px]">
+        {/* Avatar — clickable to profile */}
+        <button
+          onClick={() => navigate("/profile")}
+          className="flex items-center gap-2 pl-4 border-l border-gray-100 hover:opacity-80 transition-opacity"
+          title="View Profile"
+        >
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+          >
+            {user?.avatarURL ? (
+              <img src={user.avatarURL} alt="avatar" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
+            ) : initials}
+          </div>
+          <span className="text-sm font-medium text-gray-700">
             {user?.name?.split(" ")[0] ?? "User"}
           </span>
-        </div>
+        </button>
 
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 ml-1 sm:ml-0 shrink-0"
+          className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
           title="Logout"
         >
-          <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+          <LogOut className="w-5 h-5" />
         </button>
       </div>
     </div>

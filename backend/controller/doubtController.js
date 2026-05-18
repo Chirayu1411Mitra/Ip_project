@@ -3,115 +3,151 @@ import Notification from "../db/schemas/Notification.js";
 import { io } from "../server.js";
 
 export const createDoubt = async (req, res) => {
-  try {
-    const { question } = req.body;
-    if (!question)
-      return res.status(400).json({ message: "Question is required" });
+    try {
+        const { question } = req.body;
 
-    const doubt = await Doubt.create({ user: req.userId, question });
+        if (!question) {
+            return res.status(400).json({ message: "Question is required" });
+        }
 
-    // Populate user data before sending response
-    await doubt.populate("user", "name role");
+        const doubt = await Doubt.create({
+            user: req.userId, // comes from auth middleware
+            question
+        });
 
-    res.status(201).json(doubt);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+        res.status(201).json(doubt);
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 };
 
 export const addAnswer = async (req, res) => {
-  try {
-    const { content } = req.body;
-    if (!content)
-      return res.status(400).json({ message: "Answer content is required" });
+    try {
+        const { content } = req.body;
 
-    const doubt = await Doubt.findById(req.params.id);
-    if (!doubt) return res.status(404).json({ message: "Doubt not found" });
+        if (!content) {
+            return res.status(400).json({ message: "Answer content is required" });
+        }
 
-    doubt.answers.push({ user: req.userId, content });
-    await doubt.save();
+        const doubt = await Doubt.findById(req.params.id);
 
-    // Notify doubt owner (not self)
-    if (doubt.user.toString() !== req.userId.toString()) {
-      const notification = await Notification.create({
-        recipient: doubt.user,
-        sender: req.userId,
-        type: "ANSWER",
-        doubt: doubt._id,
-      });
-      io.to(doubt.user.toString()).emit("newNotification", notification);
+        if (!doubt) {
+            return res.status(404).json({ message: "Doubt not found" });
+        }
+
+        const answer = {
+            user: req.userId,
+            content
+        };
+
+        doubt.answers.push(answer);
+        await doubt.save();
+
+        console.log("Doubt Owner:", doubt.user.toString());
+        console.log("Answering User:", req.userId.toString());
+        
+        // 🔔 ADD THIS BLOCK
+        if (doubt.user.toString() !== req.userId.toString()) {
+            const notification = await Notification.create({
+                recipient: doubt.user,
+                sender: req.userId,
+                type: "ANSWER",
+                doubt: doubt._id
+            });
+
+            // 🔥 REALTIME EMIT
+            io.to(doubt.user.toString()).emit("newNotification", notification);
+        }
+
+        res.status(200).json(doubt);
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    // Populate and return
-    await doubt.populate("user", "name role");
-    await doubt.populate("answers.user", "name role designation");
-    res.status(200).json(doubt);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
 };
 
 export const toggleUpvote = async (req, res) => {
-  try {
-    const doubt = await Doubt.findById(req.params.id);
-    if (!doubt) return res.status(404).json({ message: "Doubt not found" });
+    try {
+        const doubt = await Doubt.findById(req.params.id);
 
-    const userId = req.userId;
-    const alreadyUpvoted = doubt.upvotes.includes(userId);
+        if (!doubt) {
+            return res.status(404).json({ message: "Doubt not found" });
+        }
 
-    if (alreadyUpvoted) doubt.upvotes.pull(userId);
-    else doubt.upvotes.push(userId);
+        const userId = req.userId;
 
-    await doubt.save();
-    res
-      .status(200)
-      .json({
-        message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
-        upvotes: doubt.upvotes.length,
-      });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
+        const alreadyUpvoted = doubt.upvotes.includes(userId);
+
+        if (alreadyUpvoted) {
+            // Remove upvote
+            doubt.upvotes.pull(userId);
+        } else {
+            // Add upvote
+            doubt.upvotes.push(userId);
+        }
+
+        await doubt.save();
+
+        res.status(200).json({
+            message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
+            upvotes: doubt.upvotes.length
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 export const toggleAnswerUpvote = async (req, res) => {
-  try {
-    const { doubtId, answerId } = req.params;
-    const doubt = await Doubt.findById(doubtId);
-    if (!doubt) return res.status(404).json({ message: "Doubt not found" });
+    try {
+        const { doubtId, answerId } = req.params;
 
-    const answer = doubt.answers.id(answerId);
-    if (!answer) return res.status(404).json({ message: "Answer not found" });
+        const doubt = await Doubt.findById(doubtId);
 
-    const userId = req.userId;
-    const alreadyUpvoted = answer.upvotes.some(
-      (id) => id.toString() === userId.toString(),
-    );
+        if (!doubt) {
+            return res.status(404).json({ message: "Doubt not found" });
+        }
 
-    if (alreadyUpvoted) answer.upvotes.pull(userId);
-    else answer.upvotes.push(userId);
+        const answer = doubt.answers.id(answerId);
 
-    await doubt.save();
-    res
-      .status(200)
-      .json({
-        message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
-        upvotes: answer.upvotes.length,
-      });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
+        if (!answer) {
+            return res.status(404).json({ message: "Answer not found" });
+        }
+
+        const userId = req.userId;
+
+        const alreadyUpvoted = answer.upvotes.some(
+            (id) => id.toString() === userId.toString()
+        );
+
+        if (alreadyUpvoted) {
+            answer.upvotes.pull(userId);
+        } else {
+            answer.upvotes.push(userId);
+        }
+
+        await doubt.save();
+
+        res.status(200).json({
+            message: alreadyUpvoted ? "Upvote removed" : "Upvoted",
+            upvotes: answer.upvotes.length
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 export const getAllDoubts = async (req, res) => {
-  try {
-    const doubts = await Doubt.find()
-      .populate("user", "name role")
-      .populate("answers.user", "name role designation")
-      .sort({ createdAt: -1 });
+    try {
+        const doubts = await Doubt.find()
+            .populate("user", "name")
+            .sort({ createdAt: -1 });
 
-    res.status(200).json(doubts);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
+        res.status(200).json(doubts);
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
 };

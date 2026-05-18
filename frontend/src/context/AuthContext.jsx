@@ -1,6 +1,5 @@
-import { createContext, useEffect, useState, useContext } from "react";
+import { createContext, useEffect, useState, useContext} from "react";
 import authService from "../services/authServices";
-import { normalizeUser } from "../utils/profilePicture";
 
 export const AuthContext = createContext(null);
 
@@ -8,17 +7,11 @@ export const AuthProvider = ({ children }) => {
   const [User, SetUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUserData = async () => {
-    const userData = await authService.getMe();
-    const normalizedUser = normalizeUser(userData);
-    SetUser(normalizedUser);
-    return normalizedUser;
-  };
-
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await refreshUserData();
+        const userData = await authService.getMe();
+        SetUser(userData);
       } catch (error) {
         SetUser(null);
       } finally {
@@ -28,6 +21,10 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  const refreshUser = async () => {
+    try { const userData = await authService.getMe(); SetUser(userData); } catch {}
+  };
+
   const login = async (email, password) => {
     try {
       console.log("AuthContext: Starting login with email:", email);
@@ -35,7 +32,7 @@ export const AuthProvider = ({ children }) => {
       console.log("AuthContext: Login response received:", response);
       const { user } = response;
       console.log("AuthContext: Setting user:", user);
-      SetUser(normalizeUser(user));
+      SetUser(user);
       console.log("AuthContext: User set successfully");
     } catch (error) {
       console.error("AuthContext: Login failed:", error);
@@ -44,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   };
   const register = async (name, email, password) => {
     const { user } = await authService.register(name, email, password);
-    SetUser(normalizeUser(user));
+    SetUser(user);
   };
   const logout = async () => {
     await authService.logout();
@@ -53,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user: User, loading, login, logout, register, refreshUserData }}
+      value={{ user: User, loading, login, logout, register, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

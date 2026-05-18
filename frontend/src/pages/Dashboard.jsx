@@ -1,20 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { BookOpen, HelpCircle, Users, Clock, ArrowRight, Download, File, Megaphone } from "lucide-react";
+import React from "react";
+import { BookOpen, HelpCircle, Users, Clock, ArrowRight, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/authhook";
-import StatCard from "../components/ui/StatCard";
-import profileService from "../services/profileServices";
-import facultyService from "../services/facultyService";
 
 const cards = [
-  {
-    label: "Notes Library",
-    desc: "Browse and download study materials",
-    icon: <BookOpen size={22} />,
-    to: "/notes",
-    color: "#7c3aed",
-    bg: "#f5f3ff",
-  },
   {
     label: "Doubts Forum",
     desc: "Ask questions, get answers from peers",
@@ -28,8 +17,8 @@ const cards = [
     desc: "Collaborate with your classmates",
     icon: <Users size={22} />,
     to: "/groups",
-    color: "#2563eb",
-    bg: "#eff6ff",
+    color: "#7c3aed",
+    bg: "#f5f3ff",
   },
   {
     label: "Deadlines",
@@ -39,229 +28,84 @@ const cards = [
     color: "#d97706",
     bg: "#fffbeb",
   },
+  {
+    label: "My Profile",
+    desc: "Update your bio and preferences",
+    icon: <User size={22} />,
+    to: "/profile",
+    color: "#2563eb",
+    bg: "#eff6ff",
+  },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [profileStats, setProfileStats] = useState({
-    notesUploaded: 0,
-    doubtsAsked: 0,
-    answersGiven: 0,
-    downloadsReceived: 0,
-  });
-  const [announcements, setAnnouncements] = useState([]);
 
-  useEffect(() => {
-    let isActive = true;
-
-    const loadStats = async () => {
-      try {
-        const [stats, annList] = await Promise.all([
-          profileService.dataStats(),
-          facultyService.getAnnouncements(),
-        ]);
-        
-        if (!isActive) return;
-
-        setProfileStats({
-          notesUploaded: stats.notesUploaded ?? 0,
-          doubtsAsked: stats.doubtsAsked ?? 0,
-          answersGiven: stats.answersGiven ?? 0,
-          downloadsReceived: stats.downloadsReceived ?? 0,
-        });
-        
-        setAnnouncements(annList || []);
-      } catch (error) {
-        if (isActive) {
-          setProfileStats({
-            notesUploaded: 0,
-            doubtsAsked: 0,
-            answersGiven: 0,
-            downloadsReceived: 0,
-          });
-          setAnnouncements([]);
-        }
-      }
-    };
-
-    if (user) {
-      loadStats();
-    }
-
-    return () => {
-      isActive = false;
-    };
-  }, [user]);
+  const initials = user?.name
+    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "U";
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 min-h-screen">
-      {/* Adjusted padding for mobile (px-4 py-6) and larger screens (sm:px-6 sm:py-8) */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Hero */}
         <div
-          className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6 sm:mb-8 text-white relative overflow-hidden"
+          className="rounded-3xl p-8 mb-8 text-white relative overflow-hidden"
           style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
         >
-          <div className="relative z-10">
-            <p className="text-purple-200 text-xs sm:text-sm font-medium mb-1">
-              Welcome back 👋
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
-              {user?.name ? `Hi, ${user.name.split(" ")[0]}!` : "Hi there!"}
-            </h1>
-            <p className="text-purple-200 text-xs sm:text-sm">
-              Ready to learn and collaborate today?
-            </p>
-          </div>
-          {/* Decorative circles */}
-          <div
-            className="absolute -right-10 -top-10 w-40 h-40 sm:w-48 sm:h-48 rounded-full opacity-10"
-            style={{ background: "white" }}
-          />
-          <div
-            className="absolute -right-4 -bottom-14 w-28 h-28 sm:w-36 sm:h-36 rounded-full opacity-10"
-            style={{ background: "white" }}
-          />
-        </div>
-
-        {/* Stats */}
-        {/* Switched to md:grid-cols-4 and added responsive gap */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <StatCard
-            label="Notes Uploaded"
-            value={profileStats.notesUploaded}
-            icon={<BookOpen size={24} />}
-            color="text-green-500 bg-green-500"
-          />
-          <StatCard
-            label="Doubts Asked"
-            value={profileStats.doubtsAsked}
-            icon={<HelpCircle size={24} />}
-            color="text-purple-500 bg-purple-500"
-          />
-          <StatCard
-            label="Answers Given"
-            value={profileStats.answersGiven}
-            icon={<Users size={24} />}
-            color="text-pink-500 bg-pink-500"
-          />
-          <StatCard
-            label="Downloads"
-            value={profileStats.downloadsReceived}
-            icon={<Clock size={24} />}
-            color="text-orange-500 bg-orange-500"
-          />
-        </div>
-
-        {/* Announcements Section */}
-        {announcements.length > 0 && (
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                <Megaphone size={20} />
-              </div>
-              <h2 className="text-base sm:text-lg font-semibold text-gray-700">
-                Important Announcements
-              </h2>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-purple-200 text-sm font-medium mb-1">Welcome back 👋</p>
+              <h1 className="text-3xl font-bold mb-2">
+                {user?.name ? `Hi, ${user.name.split(" ")[0]}!` : "Hi there!"}
+              </h1>
+              <p className="text-purple-200 text-sm">
+                {user?.branch && user?.semester
+                  ? `${user.branch} · Semester ${user.semester}`
+                  : "Ready to learn and collaborate today?"}
+              </p>
             </div>
-            
-            <div className="space-y-3 sm:space-y-4">
-              {announcements.slice(0, 5).map((ann) => (
-                <div
-                  key={ann._id}
-                  className={`bg-white rounded-2xl border-l-4 shadow-sm p-4 sm:p-5 ${
-                    ann.priority === "high"
-                      ? "border-l-red-500 bg-red-50/30"
-                      : ann.priority === "normal"
-                      ? "border-l-purple-500 bg-purple-50/30"
-                      : "border-l-gray-400 bg-gray-50/30"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-gray-900 truncate text-sm sm:text-base">
-                          {ann.title}
-                        </p>
-                        {ann.priority === "high" && (
-                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex-shrink-0">
-                            Urgent
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                        {ann.content}
-                      </p>
-                      <p className="text-xs text-gray-400 mb-2">
-                        Posted by: {ann.postedBy?.name} on{" "}
-                        {new Date(ann.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                      
-                      {/* Files Section */}
-                      {ann.files && ann.files.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs font-semibold text-gray-600 mb-2">
-                            Attachments ({ann.files.length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {ann.files.map((file, idx) => (
-                              <a
-                                key={idx}
-                                href={file.url}
-                                download={file.name}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors text-xs font-medium text-gray-700"
-                              >
-                                <File size={14} />
-                                <span className="truncate max-w-[120px]">{file.name}</span>
-                                <Download size={12} className="flex-shrink-0" />
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* Avatar */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-16 h-16 rounded-2xl border-2 border-white/30 overflow-hidden flex items-center justify-center text-white text-xl font-bold shrink-0 hover:border-white/60 transition-all"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+              title="View Profile"
+            >
+              {user?.avatarURL ? (
+                <img src={user.avatarURL} alt="avatar" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
+              ) : initials}
+            </button>
           </div>
-        )}
+          {/* Decorative */}
+          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full opacity-10" style={{ background: "white" }} />
+          <div className="absolute -right-4 -bottom-14 w-36 h-36 rounded-full opacity-10" style={{ background: "white" }} />
+        </div>
 
         {/* Feature cards */}
-        <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
-          Quick Access
-        </h2>
-
-        {/* Changed to grid-cols-1 for mobile, sm:grid-cols-2 for tablets/desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-2 gap-4">
           {cards.map(({ label, desc, icon, to, color, bg }) => (
             <button
               key={to}
               onClick={() => navigate(to)}
-              className="text-left bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-all group flex sm:block items-center sm:items-start"
+              className="text-left bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all group"
             >
-              {/* Added responsive layout inside the button for 1-col view */}
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center sm:mb-3 shrink-0 mr-4 sm:mr-0"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
                 style={{ background: bg, color }}
               >
                 {icon}
               </div>
-              <div className="flex items-center sm:items-start justify-between w-full">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">{label}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                 </div>
                 <ArrowRight
                   size={16}
-                  className="text-gray-300 group-hover:text-purple-500 transition-colors shrink-0 ml-2 sm:ml-0 sm:mt-0.5"
+                  className="text-gray-300 group-hover:text-purple-500 transition-colors mt-0.5 flex-shrink-0"
                 />
               </div>
             </button>

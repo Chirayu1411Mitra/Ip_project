@@ -5,6 +5,7 @@ import {
   generateToken,
   clearTokenCookie,
 } from "../utils/genToken.js";
+import { serializeUser } from "../utils/userSerializer.js";
 
 export const login = async (req, res) => {
   try {
@@ -32,21 +33,25 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Check if user is banned
+    if (user.bannedUntil && user.bannedUntil > new Date()) {
+      const daysRemaining = Math.ceil(
+        (user.bannedUntil - new Date()) / (1000 * 60 * 60 * 24),
+      );
+      return res.status(403).json({
+        message: `Account suspended for ${daysRemaining} more days`,
+        bannedUntil: user.bannedUntil,
+        banReason: user.banReason,
+        banned: true,
+      });
+    }
+
     const token = generateToken(user._id);
     setTokenCookie(res, token);
     console.log("Login success for user:", email);
 
     res.json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        rollNo: user.rollNo,
-        semester: user.semester,
-        branch: user.branch,
-        bio: user.bio,
-        avatarURL: user.avatarURL,
-      },
+      user: serializeUser(user),
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -80,18 +85,51 @@ export const register = async (req, res) => {
       rollNo,
       semester,
       branch,
+      role: "student",
     });
     res.status(201).json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        rollNo: user.rollNo,
-        semester: user.semester,
-        branch: user.branch,
-        bio: user.bio,
-        avatarURL: user.avatarURL,
-      },
+      user: serializeUser(user),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+export const registerFaculty = async (req, res) => {
+  try {
+    const { name, email, password, department, designation, facultyCode } =
+      req.body;
+
+    if (!name || !email || !password || !department || !designation) {
+      return res
+        .status(400)
+        .json({ message: "Please fill all required fields" });
+    }
+
+    if (facultyCode !== process.env.FACULTY_INVITE_CODE) {
+      return res.status(403).json({ message: "Invalid faculty invite code" });
+    }
+
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      department,
+      designation,
+      role: "faculty",
+    });
+
+    const token = generateToken(user._id);
+    setTokenCookie(res, token);
+
+    res.status(201).json({
+      user: serializeUser(user),
     });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -102,40 +140,38 @@ export const logout = (req, res) => {
   clearTokenCookie(res);
   res.json({ message: "Logged out successfully" });
 };
+
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+    res.json(serializeUser(user));
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// named exports below replace this
-
-// PATCH /api/auth/profile — update bio, avatarURL, name
 export const updateProfile = async (req, res) => {
   try {
     const { bio, avatarURL, name } = req.body;
     const updates = {};
     if (typeof bio === "string") updates.bio = bio.trim().slice(0, 300);
     if (typeof avatarURL === "string") updates.avatarURL = avatarURL.trim();
-    if (typeof name === "string" && name.trim().length > 0) updates.name = name.trim();
+    if (typeof name === "string" && name.trim().length > 0)
+      updates.name = name.trim();
 
     const user = await User.findByIdAndUpdate(req.userId, updates, {
       new: true,
       select: "-password",
     });
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: serializeUser(user) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// GET /api/auth/search?q=... — search users by name or rollNo
 export const searchUsers = async (req, res) => {
   try {
     const q = req.query.q?.trim();

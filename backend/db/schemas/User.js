@@ -18,23 +18,26 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
     },
     password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["student", "faculty"],
+      default: "student",
+    },
     rollNo: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true,
       uppercase: true,
       trim: true,
       index: true,
     },
     semester: {
       type: Number,
-      required: true,
       min: 1,
       max: 8,
     },
     branch: {
       type: String,
-      required: true,
     },
     bio: {
       type: String,
@@ -43,6 +46,20 @@ const userSchema = new mongoose.Schema(
     avatarURL: {
       type: String,
       default: "",
+    },
+    bannedUntil: {
+      type: Date,
+      default: null,
+    },
+    banReason: {
+      type: String,
+      default: "",
+    },
+    department: {
+      type: String,
+    },
+    designation: {
+      type: String,
     },
   },
   { timestamps: true },

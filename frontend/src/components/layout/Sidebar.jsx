@@ -5,19 +5,57 @@ import {
   Users,
   Clock,
   UserCircle,
+  GraduationCap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/authhook";
 import { getMyGroups, getMyDeadlines } from "../../services/api";
 
-const navLinks = [
-  { to: "/",          label: "Dashboard", icon: <Home size={18} />,       end: true },
-  { to: "/notes",     label: "Notes",     icon: <BookOpen size={18} />,   end: false },
-  { to: "/doubts",    label: "Doubts",    icon: <HelpCircle size={18} />, end: false },
-  { to: "/groups",    label: "Groups",    icon: <Users size={18} />,      end: false },
-  { to: "/deadlines", label: "Deadlines", icon: <Clock size={18} />,      end: false },
-  { to: "/profile",   label: "Profile",   icon: <UserCircle size={18} />, end: false },
+const studentLinks = [
+  { to: "/", label: "Dashboard", icon: <Home size={20} />, end: true },
+  { to: "/notes", label: "Notes", icon: <BookOpen size={20} />, end: false },
+  {
+    to: "/doubts",
+    label: "Doubts",
+    icon: <HelpCircle size={20} />,
+    end: false,
+  },
+  { to: "/groups", label: "Groups", icon: <Users size={20} />, end: false },
+  {
+    to: "/deadlines",
+    label: "Deadlines",
+    icon: <Clock size={20} />,
+    end: false,
+  },
+  {
+    to: "/profile",
+    label: "Profile",
+    icon: <UserCircle size={20} />,
+    end: false,
+  },
+];
+
+const facultyLinks = [
+  { to: "/", label: "Dashboard", icon: <Home size={20} />, end: true },
+  {
+    to: "/faculty",
+    label: "Faculty Portal",
+    icon: <GraduationCap size={20} />,
+    end: false,
+  },
+  {
+    to: "/doubts",
+    label: "Doubts",
+    icon: <HelpCircle size={20} />,
+    end: false,
+  },
+  {
+    to: "/profile",
+    label: "Profile",
+    icon: <UserCircle size={20} />,
+    end: false,
+  },
 ];
 
 const Sidebar = () => {
@@ -25,8 +63,12 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ groups: 0, pending: 0, overdue: 0 });
 
+  const isFaculty = user?.role === "faculty";
+  const navLinks = isFaculty ? facultyLinks : studentLinks;
+
   useEffect(() => {
     const fetchStats = async () => {
+      if (isFaculty) return; // Skip for faculty
       try {
         const [groupsRes, deadlinesRes] = await Promise.all([
           getMyGroups(),
@@ -57,47 +99,63 @@ const Sidebar = () => {
       }
     };
     fetchStats();
-  }, []);
+  }, [isFaculty]);
 
   const initials = user?.name
-    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    ? user.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
     : "U";
 
+  // Unified Premium Purple Gradient for the platform
+  const brandGradient = "bg-gradient-to-br from-[#7c3aed] to-[#5b21b6]";
+
   return (
-    <div
-      style={{ minWidth: "256px", width: "256px" }}
-      className="flex flex-col h-screen bg-white p-5 shadow-sm border-r border-gray-100"
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-8 px-2">
+    <div className="w-64 min-w-[256px] flex-shrink-0 flex flex-col h-screen bg-white p-5 shadow-[4px_0_24px_rgba(0,0,0,0.02)] border-r border-gray-100 z-20">
+      {/* Brand Logo */}
+      <div className="flex items-center gap-3 mb-8 px-2 mt-2">
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200 ${brandGradient}`}
         >
-          <BookOpen size={18} color="white" />
+          <BookOpen size={20} className="text-white" />
         </div>
-        <span className="text-xl font-bold text-gray-900">uConnect</span>
+        <span className="text-2xl font-black text-gray-900 tracking-tight">
+          uConnect
+        </span>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-grow">
-        <ul className="flex flex-col gap-1">
+      {/* Faculty Profile Badge */}
+      {isFaculty && (
+        <div className="mb-6 px-4 py-3 bg-purple-50 rounded-2xl border border-purple-100 shadow-sm">
+          <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1">
+            Faculty Member
+          </p>
+          <p className="text-sm font-bold text-purple-900 truncate">
+            {user?.designation}
+          </p>
+          <p className="text-xs font-medium text-purple-600 truncate">
+            {user?.department}
+          </p>
+        </div>
+      )}
+
+      {/* Navigation Links */}
+      <nav className="flex-grow overflow-y-auto custom-scrollbar pr-1 -mr-1">
+        <ul className="flex flex-col gap-1.5">
           {navLinks.map(({ to, label, icon, end }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
                     isActive
-                      ? "text-white"
-                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                      ? `${brandGradient} text-white shadow-md shadow-purple-200 translate-x-1`
+                      : "text-gray-500 hover:bg-purple-50 hover:text-purple-700"
                   }`
-                }
-                style={({ isActive }) =>
-                  isActive
-                    ? { background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }
-                    : {}
                 }
               >
                 {icon}
@@ -108,45 +166,65 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* Quick Stats */}
-      <div className="mt-auto pt-4 rounded-2xl p-4" style={{ background: "#f5f3ff" }}>
-        <h2 className="text-xs uppercase tracking-wider font-semibold text-purple-400 mb-3">
-          Quick Stats
-        </h2>
-        <ul className="text-sm space-y-2 text-gray-700">
-          <li className="flex justify-between">
-            <span>Groups Joined</span>
-            <strong className="text-purple-600">{stats.groups}</strong>
-          </li>
-          <li className="flex justify-between">
-            <span>Pending Tasks</span>
-            <strong className="text-purple-600">{stats.pending}</strong>
-          </li>
-          <li className="flex justify-between">
-            <span>Overdue</span>
-            <strong className={stats.overdue > 0 ? "text-red-500" : "text-purple-600"}>
-              {stats.overdue}
-            </strong>
-          </li>
-        </ul>
-      </div>
+      {/* Student Quick Stats */}
+      {!isFaculty && (
+        <div className="mt-auto pt-4 rounded-2xl p-5 bg-purple-50/50 border border-purple-50 mb-4">
+          <h2 className="text-[10px] uppercase tracking-widest font-black text-purple-400 mb-4">
+            Quick Stats
+          </h2>
+          <ul className="text-sm space-y-3 font-medium text-gray-600">
+            <li className="flex justify-between items-center">
+              <span>Groups</span>
+              <strong className="text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
+                {stats.groups}
+              </strong>
+            </li>
+            <li className="flex justify-between items-center">
+              <span>Tasks</span>
+              <strong className="text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
+                {stats.pending}
+              </strong>
+            </li>
+            <li className="flex justify-between items-center">
+              <span>Overdue</span>
+              <strong
+                className={`${stats.overdue > 0 ? "text-red-700 bg-red-100" : "text-purple-700 bg-purple-100"} px-2 py-0.5 rounded-md`}
+              >
+                {stats.overdue}
+              </strong>
+            </li>
+          </ul>
+        </div>
+      )}
 
-      {/* User mini card at bottom */}
+      {/* Bottom User Card */}
       <button
         onClick={() => navigate("/profile")}
-        className="mt-3 flex items-center gap-2.5 p-3 rounded-xl hover:bg-gray-50 transition-all text-left w-full"
+        className="mt-2 flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all text-left w-full group"
       >
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
-          style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden shadow-sm group-hover:shadow-md transition-shadow ${brandGradient}`}
         >
           {user?.avatarURL ? (
-            <img src={user.avatarURL} alt="avatar" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
-          ) : initials}
+            <img
+              src={user.avatarURL}
+              alt="avatar"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
+            />
+          ) : (
+            initials
+          )}
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-800 truncate">{user?.name || "User"}</p>
-          <p className="text-xs text-gray-400 truncate">{user?.rollNo || user?.email || ""}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-gray-900 truncate group-hover:text-purple-700 transition-colors">
+            {user?.name || "User"}
+          </p>
+          <p className="text-xs font-medium text-gray-400 truncate">
+            {user?.rollNo || user?.email || ""}
+          </p>
         </div>
       </button>
     </div>

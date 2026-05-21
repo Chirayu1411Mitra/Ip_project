@@ -90,12 +90,12 @@ const FacultyDashboard = () => {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-700 border-red-300";
+        return "bg-red-100 text-red-700 border-l-4 border-red-400";
       case "low":
-        return "bg-gray-100 text-gray-700 border-gray-300";
+        return "bg-gray-100 text-gray-700 border-l-4 border-gray-400";
       case "normal":
       default:
-        return "bg-blue-100 text-blue-700 border-blue-300";
+        return "bg-blue-100 text-blue-700 border-l-4 border-blue-400";
     }
   };
 
@@ -110,12 +110,25 @@ const FacultyDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Hero Banner */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl p-8 shadow-lg">
-          <h1 className="text-4xl font-bold mb-2">{user?.name}</h1>
-          <p className="text-blue-100 text-lg">
-            {user?.designation} • {user?.department}
-          </p>
+        {/* Hero Banner - Purple Brand */}
+        <div className="rounded-2xl p-8 shadow-lg text-white relative overflow-hidden bg-gradient-to-br from-[#7c3aed] to-[#5b21b6]">
+          <div className="relative z-10 flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2.5 py-0.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-purple-50">
+                  Faculty Dashboard
+                </span>
+              </div>
+              <h1 className="text-4xl font-bold mb-2">{user?.name}</h1>
+              <p className="text-purple-200 text-lg">
+                {user?.designation} • {user?.department}
+              </p>
+            </div>
+          </div>
+          
+          {/* Decorative Background Blobs */}
+          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="absolute right-10 -bottom-10 w-32 h-32 rounded-full bg-purple-400/20 blur-2xl pointer-events-none" />
         </div>
 
         {/* Stats Row */}
@@ -129,7 +142,7 @@ const FacultyDashboard = () => {
             {
               label: "Announcements Posted",
               value: stats?.announcementsPosted || 0,
-              color: "from-blue-400 to-blue-600",
+              color: "from-[#7c3aed] to-[#5b21b6]",
             },
             {
               label: "Total Students",
@@ -187,7 +200,8 @@ const FacultyDashboard = () => {
             <h2 className="text-2xl font-bold text-gray-800">Announcements</h2>
             <button
               onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="flex items-center gap-2 text-white px-4 py-2 rounded-lg transition hover:shadow-lg"
+              style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
             >
               <Plus className="w-5 h-5" />
               New Announcement
@@ -212,7 +226,7 @@ const FacultyDashboard = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
               />
               <textarea
                 placeholder="Announcement Content"
@@ -221,7 +235,7 @@ const FacultyDashboard = () => {
                   setFormData({ ...formData, content: e.target.value })
                 }
                 rows="4"
-                className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full mb-3 p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
               />
               <div className="flex gap-3 items-center">
                 <select
@@ -229,7 +243,7 @@ const FacultyDashboard = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, priority: e.target.value })
                   }
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition"
                 >
                   <option value="low">Low Priority</option>
                   <option value="normal">Normal Priority</option>
@@ -237,7 +251,8 @@ const FacultyDashboard = () => {
                 </select>
                 <button
                   type="submit"
-                  className="ml-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  className="ml-auto text-white px-4 py-2 rounded-lg transition hover:shadow-lg"
+                  style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
                 >
                   Post Announcement
                 </button>
@@ -255,7 +270,7 @@ const FacultyDashboard = () => {
               announcements.map((ann) => (
                 <div
                   key={ann._id}
-                  className={`p-4 rounded-lg border-l-4 ${getPriorityColor(ann.priority)}`}
+                  className={`p-4 rounded-lg ${getPriorityColor(ann.priority)}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -284,7 +299,7 @@ const FacultyDashboard = () => {
         <div className="bg-white rounded-2xl p-6 shadow-lg">
           <button
             onClick={() => setShowStudentActivity(!showStudentActivity)}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition rounded-lg"
+            className="w-full flex items-center justify-between p-4 hover:bg-purple-50 transition rounded-lg"
           >
             <h2 className="text-2xl font-bold text-gray-800">
               Student Activity

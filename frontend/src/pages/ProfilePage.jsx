@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { updateProfile } from "../services/api";
-import { Mail, Hash, BookOpen, GraduationCap, Edit3, Check, X, Camera } from "lucide-react";
+import { Mail, Hash, BookOpen, GraduationCap, Edit3, Check, X, Camera, AlertCircle, Loader } from "lucide-react";
 
 const AVATAR_PRESETS = [
   "https://api.dicebear.com/8.x/thumbs/svg?seed=Felix&backgroundColor=7c3aed",
@@ -26,8 +26,60 @@ const InfoField = ({ icon, label, value }) => (
   </div>
 );
 
+/**
+ * Canvas-based image resizer with JPEG compression
+ * Resizes image to max 200x200px to keep MongoDB document size reasonable
+ * @param {File} file - Image file to resize
+ * @param {number} maxWidth - Max width in pixels (default: 200)
+ * @param {number} maxHeight - Max height in pixels (default: 200)
+ * @returns {Promise<string>} Base64 JPEG dataURL
+ */
+const resizeImageWithCanvas = (file, maxWidth = 200, maxHeight = 200) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        
+        // Maintain aspect ratio while fitting in max bounds
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compress to JPEG with 0.9 quality
+        const base64 = canvas.toDataURL("image/jpeg", 0.9);
+        resolve(base64);
+      };
+      
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+};
+
 const ProfilePage = () => {
   const { user, refreshUser } = useAuth();
+  const fileInputRef = useRef(null);
 
   const [editing, setEditing]           = useState(false);
   const [avatarPicker, setAvatarPicker] = useState(false);
@@ -37,12 +89,46 @@ const ProfilePage = () => {
     avatarURL: user?.avatarURL || "",
   });
   const [saving,  setSaving]  = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error,   setError]   = useState("");
   const [success, setSuccess] = useState(false);
+  const [sizeWarning, setSizeWarning] = useState("");
 
   const initials = user?.name
     ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "U";
+
+  /**
+   * Handle file input change - convert image to base64 and set preview
+   * Automatically resizes and compresses before storing
+   */
+  const handleFileSelect = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setError("");
+    setSizeWarning("");
+    
+    // Check file size (warn if > 2MB original)
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 2) {
+      setSizeWarning(
+        `Original image is ${fileSizeMB.toFixed(1)}MB. Resizing and compressing...`
+      );
+    }
+    
+    try {
+      setUploading(true);
+      // Resize to 200x200 and compress to JPEG
+      const base64 = await resizeImageWithCanvas(file);
+      setForm((f) => ({ ...f, avatarURL: base64 }));
+      setSizeWarning(""); // Clear warning after successful resize
+    } catch (err) {
+      setError(`Failed to process image: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     setError("");
@@ -54,7 +140,7 @@ const ProfilePage = () => {
         bio:       form.bio.trim(),
         avatarURL: form.avatarURL.trim(),
       });
-      await refreshUser();          // pull fresh user into AuthContext
+      await refreshUser();          // pull fresh user into AuthContext → Header updates automatically
       setSuccess(true);
       setEditing(false);
       setAvatarPicker(false);
@@ -71,6 +157,7 @@ const ProfilePage = () => {
     setEditing(false);
     setAvatarPicker(false);
     setError("");
+    setSizeWarning("");
   };
 
   const currentAvatar = editing ? form.avatarURL : user?.avatarURL;
@@ -117,11 +204,27 @@ const ProfilePage = () => {
                 {editing && (
                   <button
                     onClick={() => setAvatarPicker((p) => !p)}
-                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center shadow-md hover:bg-purple-700 transition-colors"
+                    disabled={uploading}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center shadow-md hover:bg-purple-700 transition-colors disabled:opacity-50"
+                    title="Change avatar"
                   >
-                    <Camera size={13} color="white" />
+                    {uploading ? (
+                      <Loader size={13} color="white" className="animate-spin" />
+                    ) : (
+                      <Camera size={13} color="white" />
+                    )}
                   </button>
                 )}
+                
+                {/* Hidden file input for image upload */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  disabled={uploading}
+                />
               </div>
 
               {/* Action buttons */}
@@ -157,13 +260,24 @@ const ProfilePage = () => {
             {/* Avatar picker */}
             {avatarPicker && (
               <div className="mb-4 p-4 bg-purple-50 rounded-2xl border border-purple-100">
-                <p className="text-xs font-semibold text-purple-600 mb-3">Choose an avatar</p>
-                <div className="flex gap-2 flex-wrap mb-3">
+                <p className="text-xs font-semibold text-purple-600 mb-3">Choose or upload an avatar</p>
+                
+                {/* Size warning */}
+                {sizeWarning && (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                    <AlertCircle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700">{sizeWarning}</p>
+                  </div>
+                )}
+                
+                {/* Preset avatars */}
+                <div className="flex gap-2 flex-wrap mb-4">
                   {AVATAR_PRESETS.map((url, i) => (
                     <button
                       key={i}
                       onClick={() => setForm((f) => ({ ...f, avatarURL: url }))}
-                      className={`w-11 h-11 rounded-xl overflow-hidden border-2 transition-all ${
+                      disabled={uploading}
+                      className={`w-11 h-11 rounded-xl overflow-hidden border-2 transition-all disabled:opacity-50 ${
                         form.avatarURL === url
                           ? "border-purple-600 scale-110 shadow-md"
                           : "border-transparent hover:border-purple-300"
@@ -172,10 +286,12 @@ const ProfilePage = () => {
                       <img src={url} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
+                  
                   {/* Initials option */}
                   <button
                     onClick={() => setForm((f) => ({ ...f, avatarURL: "" }))}
-                    className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                    disabled={uploading}
+                    className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center text-xs font-bold transition-all disabled:opacity-50 ${
                       !form.avatarURL
                         ? "border-purple-600 bg-purple-200 text-purple-800"
                         : "border-gray-200 text-gray-400 hover:border-purple-300"
@@ -184,11 +300,33 @@ const ProfilePage = () => {
                     {initials}
                   </button>
                 </div>
+                
+                {/* File upload button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full mb-3 px-3 py-2 rounded-xl border-2 border-dashed border-purple-300 bg-white text-sm font-medium text-purple-600 hover:bg-purple-50 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader size={14} className="animate-spin" />
+                      Processing image...
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={14} />
+                      Upload Photo
+                    </>
+                  )}
+                </button>
+                
+                {/* Custom URL input */}
                 <input
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-purple-300"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-purple-300 disabled:opacity-50"
                   placeholder="Or paste a custom image URL…"
                   value={form.avatarURL}
                   onChange={(e) => setForm((f) => ({ ...f, avatarURL: e.target.value }))}
+                  disabled={uploading}
                 />
               </div>
             )}

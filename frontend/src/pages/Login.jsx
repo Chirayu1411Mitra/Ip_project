@@ -47,9 +47,9 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-[#F5F3FF] w-full min-h-screen flex items-center justify-center font-sans p-4 sm:p-6 custom-scrollbar">
+    <div className="bg-gray-50 w-full min-h-screen flex items-center justify-center font-sans p-4 sm:p-6 custom-scrollbar">
       {/* Main Container - Responsive Border Radius */}
-      <div className="flex w-full max-w-[1000px] bg-white rounded-3xl sm:rounded-[40px] shadow-2xl overflow-hidden min-h-[600px]">
+      <div className="flex w-full max-w-[1000px] bg-white rounded-3xl sm:rounded-[45px] shadow-2xl overflow-hidden min-h-[600px]">
         {/* LEFT SIDE (Animation - Hidden on Mobile) */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-purple-50 to-indigo-50 items-center justify-center p-12 relative overflow-hidden">
           <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-purple-200 rounded-full blur-3xl opacity-40 pointer-events-none"></div>

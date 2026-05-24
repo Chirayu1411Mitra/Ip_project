@@ -317,15 +317,15 @@ const FacultyDashboard = () => {
               <div className="overflow-x-auto mt-4">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="p-3 text-left font-bold">Name</th>
-                      <th className="p-3 text-left font-bold">Roll No</th>
-                      <th className="p-3 text-left font-bold">Branch</th>
-                      <th className="p-3 text-left font-bold">Sem</th>
-                      <th className="p-3 text-center font-bold">Notes</th>
-                      <th className="p-3 text-center font-bold">Doubts</th>
-                      <th className="p-3 text-center font-bold">Downloads</th>
-                      <th className="p-3 text-left font-bold">Status</th>
+                    <tr className="border-b bg-purple-50">
+                      <th className="p-3 text-left font-bold text-purple-700">Name</th>
+                      <th className="p-3 text-left font-bold text-purple-700">Roll No</th>
+                      <th className="p-3 text-left font-bold text-purple-700">Branch</th>
+                      <th className="p-3 text-left font-bold text-purple-700">Sem</th>
+                      <th className="p-3 text-center font-bold text-purple-700">Notes</th>
+                      <th className="p-3 text-center font-bold text-purple-700">Doubts</th>
+                      <th className="p-3 text-center font-bold text-purple-700">Downloads</th>
+                      <th className="p-3 text-left font-bold text-purple-700">Status</th>
                     </tr>
                   </thead>
                   <tbody>

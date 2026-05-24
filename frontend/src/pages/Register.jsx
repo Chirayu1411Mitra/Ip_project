@@ -40,7 +40,7 @@ const Register = () => {
     }
   };
   return (
-    <div className="bg-[#E9EEF9] w-full min-h-screen flex items-center justify-center font-sans p-4">
+    <div className="bg-gray-50 w-full min-h-screen flex items-center justify-center font-sans p-4">
       <div className="flex w-full max-w-[950px] bg-white rounded-[45px] shadow-xl overflow-hidden min-h-[650px] flex-row-reverse">
         
         {/* RIGHT SIDE (Animation) */}
@@ -71,7 +71,7 @@ const Register = () => {
 
               {/* Name */}
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-5 h-5 transition-colors" />
                 <input
                   name="name"
                   type="text"
@@ -79,13 +79,13 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="John Doe"
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
+                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7c3aed] transition-all text-gray-700"
                 />
               </div>
 
               {/* Email */}
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-5 h-5 transition-colors" />
                 <input
                   name="email"
                   type="email"
@@ -93,13 +93,13 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="john.doe@example.com"
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
+                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7c3aed] transition-all text-gray-700"
                 />
               </div>
 
               {/* Password */}
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-5 h-5 transition-colors" />
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
@@ -108,7 +108,7 @@ const Register = () => {
                   placeholder="Password"
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-12 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
+                  className="w-full pl-12 pr-12 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7c3aed] transition-all text-gray-700"
                 />
                 <button
                   type="button"
@@ -120,7 +120,7 @@ const Register = () => {
               </div>
 
               <div className="relative group">
-                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-5 h-5 transition-colors" />
+                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-5 h-5 transition-colors" />
                 <input
                   name="rollNo"
                   type="text"
@@ -128,12 +128,12 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="Roll No."
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7C7CC9] transition-all text-gray-700"
+                  className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-gray-100 rounded-2xl outline-none focus:border-[#7c3aed] transition-all text-gray-700"
                 />
               </div>
               <div className="flex gap-3">
                 <div className="relative w-1/2 group">
-                  <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-4 h-4 transition-colors" />
+                  <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-4 h-4 transition-colors" />
                   <select
                     name="branch"
                     value={form.branch}
@@ -146,7 +146,7 @@ const Register = () => {
                   </select>
                 </div>
                 <div className="relative w-1/2 group">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7C7CC9] w-4 h-4 transition-colors" />
+                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#7c3aed] w-4 h-4 transition-colors" />
                   <select
                     name="semester"
                     value={form.semester}
@@ -163,7 +163,8 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#7C7CC9] hover:bg-[#6B6BB3] text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 mt-4 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-200 mt-4 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}
               >
                 {loading ? "Creating account..." : "Register"}
               </button>
@@ -172,7 +173,7 @@ const Register = () => {
 
             <div className="mt-8 text-center w-full">
               <p className="text-gray-500 text-sm font-medium">Already have an account?</p>
-              <Link to="/login" className="text-[#7C7CC9] font-bold text-sm hover:underline">
+              <Link to="/login" className="text-purple-600 font-bold text-sm hover:underline">
                 Login
               </Link>
             </div>

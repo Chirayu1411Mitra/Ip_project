@@ -43,7 +43,11 @@ applyGlobalMiddlewares(app);
 // Root route to avoid 404s when visiting the service URL directly
 app.get("/", (req, res) => {
   const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL;
-  if (clientUrl) return res.redirect(clientUrl);
+  if (clientUrl) {
+    // Redirect to the frontend login page when visiting the API root
+    const normalized = clientUrl.replace(/\/+$/g, "");
+    return res.redirect(`${normalized}/login`);
+  }
   return res.send("IP Project API is running");
 });
 

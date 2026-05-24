@@ -33,8 +33,15 @@ export const applyGlobalMiddlewares = (app) => {
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   };
 
-  app.options("*", cors(corsOptions)); // Handle preflight for ALL routes
+  // Avoid using app.options("*") which can crash on some hosts (path-to-regexp).
+  // Use the cors middleware and a safe OPTIONS handler instead.
   app.use(cors(corsOptions));
+  app.use((req, res, next) => {
+    if (req.method === "OPTIONS") {
+      return cors(corsOptions)(req, res, next);
+    }
+    next();
+  });
   app.use(cookieParser());
   app.use(morgan("dev"));
   app.use(express.json());

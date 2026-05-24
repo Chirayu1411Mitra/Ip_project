@@ -1,9 +1,15 @@
 import { toggleDoubtUpvote } from "../services/api";
 import { useState } from "react";
 import AnswerThread from "./AnswerThread";
-import { ThumbsUp, MessageCircle, ChevronDown, ChevronUp, User } from "lucide-react";
+import {
+  ThumbsUp,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  User,
+} from "lucide-react";
 
-function DoubtCard({ doubt, onUpdate }) {
+function DoubtCard({ doubt, onUpdate, onBanError }) {
   const [upvotes, setUpvotes] = useState(doubt.upvotes?.length ?? 0);
   const [upvoteLoading, setUpvoteLoading] = useState(false);
   const [showAnswers, setShowAnswers] = useState(false);
@@ -39,7 +45,12 @@ function DoubtCard({ doubt, onUpdate }) {
 
   const answersCount = localDoubt.answers?.length ?? 0;
   const initials = doubt.user?.name
-    ? doubt.user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    ? doubt.user.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
     : "?";
 
   return (
@@ -62,7 +73,9 @@ function DoubtCard({ doubt, onUpdate }) {
               <span className="text-sm font-semibold text-gray-800">
                 {doubt.user?.name ?? "Anonymous"}
               </span>
-              <span className="text-xs text-gray-400">{timeAgo(doubt.createdAt)}</span>
+              <span className="text-xs text-gray-400">
+                {timeAgo(doubt.createdAt)}
+              </span>
             </div>
             <p className="text-gray-800 mt-1 text-sm leading-relaxed font-medium">
               {doubt.question}
@@ -108,7 +121,11 @@ function DoubtCard({ doubt, onUpdate }) {
       {/* Answer thread */}
       {showAnswers && (
         <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
-          <AnswerThread doubt={localDoubt} onDoubtUpdated={handleDoubtUpdated} />
+          <AnswerThread
+            doubt={localDoubt}
+            onDoubtUpdated={handleDoubtUpdated}
+            onBanError={onBanError}
+          />
         </div>
       )}
     </div>

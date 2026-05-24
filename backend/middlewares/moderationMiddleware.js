@@ -1,3 +1,4 @@
+// backend/middlewares/moderationMiddleware.js
 import User from "../db/schemas/User.js";
 import { BedrockRuntimeClient, ApplyGuardrailCommand } from "@aws-sdk/client-bedrock-runtime";
 
@@ -69,7 +70,7 @@ export const moderateContent = (fieldsToCheck) => {
       next();
     } catch (err) {
       console.error("moderateContent error:", err);
-      next();
+      next(); // fail open
     }
   };
 };

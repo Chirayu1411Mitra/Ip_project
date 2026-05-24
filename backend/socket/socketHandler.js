@@ -1,4 +1,5 @@
 import Group from "../db/schemas/Group.js";
+import User from "../db/schemas/User.js";
 import { verifyToken } from "../utils/genToken.js";
 
 // Map: socketId → { userId, groupId }
@@ -8,6 +9,91 @@ const typingUsers = new Map();
 
 const TYPING_TIMEOUT_MS = 3000;
 const typingTimers = new Map(); // key: `${groupId}:${userId}`
+
+// Helper function to check moderation for group messages
+const checkModerationForGroupChat = async (text, userId, io) => {
+  try {
+    const response = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.3,
+          max_tokens: 150,
+          messages: [
+            {
+              role: "system",
+              content: `You are a content moderation system for a student academic platform.
+Analyze the text and check for: hate speech/racial slurs, harassment/personal abuse, inappropriate sexual content, threats of violence.
+Respond ONLY with valid JSON: {"violated": true/false, "reason": "brief reason or empty string"}
+Be strict but fair. Academic frustration and criticism of ideas are allowed. Only flag clear serious violations.`,
+            },
+            {
+              role: "user",
+              content: `Check this content: "${text}"`,
+            },
+          ],
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.error("Groq Moderation API error:", response.status);
+      return { violated: false };
+    }
+
+    const data = await response.json();
+    const textContent = data.choices?.[0]?.message?.content;
+
+    if (!textContent) {
+      return { violated: false };
+    }
+
+    let moderation;
+    try {
+      const clean = textContent.replace(/```json|```/g, "").trim();
+      moderation = JSON.parse(clean);
+    } catch {
+      console.error("Failed to parse moderation response:", textContent);
+      return { violated: false };
+    }
+
+    // If violated, ban the user and emit socket event
+    if (moderation.violated === true) {
+      const user = await User.findByIdAndUpdate(
+        userId,
+        {
+          bannedUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          banReason: moderation.reason,
+        },
+        { returnDocument: "after" },
+      );
+
+      // Emit ban event to frontend via Socket.io
+      io.to(userId.toString()).emit("userBanned", {
+        message:
+          "Your message violated our community policy. Your account has been suspended for 30 days.",
+        banReason: moderation.reason,
+        bannedUntil: user.bannedUntil,
+        banned: true,
+      });
+
+      console.log(
+        `User ${userId} banned in group chat for: ${moderation.reason}`,
+      );
+    }
+
+    return moderation;
+  } catch (err) {
+    console.error("Moderation check error:", err);
+    return { violated: false };
+  }
+};
 
 export const initSocketHandler = (io) => {
   io.on("connection", (socket) => {
@@ -38,13 +124,17 @@ export const initSocketHandler = (io) => {
     // ── join-room ──────────────────────────────────────────────────────
     socket.on("join-room", async ({ groupId }) => {
       try {
-        if (!currentUserId) return socket.emit("error", { message: "Unauthorized" });
+        if (!currentUserId)
+          return socket.emit("error", { message: "Unauthorized" });
 
         const group = await Group.findById(groupId).select("members");
         if (!group) return socket.emit("error", { message: "Group not found" });
 
-        const isMember = group.members.some((m) => m.toString() === currentUserId);
-        if (!isMember) return socket.emit("error", { message: "Access denied" });
+        const isMember = group.members.some(
+          (m) => m.toString() === currentUserId,
+        );
+        if (!isMember)
+          return socket.emit("error", { message: "Access denied" });
 
         socket.join(groupId);
         socketUserMap.set(socket.id, { userId: currentUserId, groupId });
@@ -56,17 +146,30 @@ export const initSocketHandler = (io) => {
     // ── send-message ───────────────────────────────────────────────────
     socket.on("send-message", async ({ groupId, text }) => {
       try {
-        if (!currentUserId) return socket.emit("error", { message: "Unauthorized" });
+        if (!currentUserId)
+          return socket.emit("error", { message: "Unauthorized" });
         if (!text || text.trim().length === 0) return;
-        if (text.trim().length > 2000) return socket.emit("error", { message: "Message too long" });
+        if (text.trim().length > 2000)
+          return socket.emit("error", { message: "Message too long" });
+
+        // Check if user is banned
+        const user = await User.findById(currentUserId);
+        if (user && user.bannedUntil && user.bannedUntil > new Date()) {
+          return socket.emit("error", {
+            message: "Your account is suspended. You cannot send messages.",
+          });
+        }
 
         const group = await Group.findById(groupId);
         if (!group) return socket.emit("error", { message: "Group not found" });
 
-        const isMember = group.members.some((m) => m.toString() === currentUserId);
-        if (!isMember) return socket.emit("error", { message: "Access denied" });
+        const isMember = group.members.some(
+          (m) => m.toString() === currentUserId,
+        );
+        if (!isMember)
+          return socket.emit("error", { message: "Access denied" });
 
-        // Build and persist message
+        // Build and persist message immediately
         const newMessage = { sender: currentUserId, text: text.trim() };
         group.messages.push(newMessage);
 
@@ -79,16 +182,30 @@ export const initSocketHandler = (io) => {
 
         // Populate sender for broadcast
         const savedMsg = group.messages[group.messages.length - 1];
-        await group.populate({ path: "messages.sender", select: "name rollNo avatarURL" });
+        await group.populate({
+          path: "messages.sender",
+          select: "name rollNo avatarURL",
+        });
 
         const populatedMsg = group.messages.find(
-          (m) => m._id.toString() === savedMsg._id.toString()
+          (m) => m._id.toString() === savedMsg._id.toString(),
         );
 
         io.to(groupId).emit("receive-message", {
           groupId,
           message: populatedMsg,
         });
+
+        // Check moderation asynchronously AFTER posting
+        checkModerationForGroupChat(text, currentUserId, io).then(
+          (moderation) => {
+            if (moderation.violated === true) {
+              console.log(
+                `User ${currentUserId} banned in group chat for: ${moderation.reason}`,
+              );
+            }
+          },
+        );
       } catch (err) {
         socket.emit("error", { message: "Failed to send message" });
       }
@@ -106,7 +223,9 @@ export const initSocketHandler = (io) => {
       // Auto-clear after timeout
       if (typingTimers.has(timerKey)) clearTimeout(typingTimers.get(timerKey));
       const timer = setTimeout(() => {
-        socket.to(groupId).emit("user-stop-typing", { groupId, userId: currentUserId });
+        socket
+          .to(groupId)
+          .emit("user-stop-typing", { groupId, userId: currentUserId });
         typingTimers.delete(timerKey);
       }, TYPING_TIMEOUT_MS);
       typingTimers.set(timerKey, timer);
@@ -120,7 +239,9 @@ export const initSocketHandler = (io) => {
         clearTimeout(typingTimers.get(timerKey));
         typingTimers.delete(timerKey);
       }
-      socket.to(groupId).emit("user-stop-typing", { groupId, userId: currentUserId });
+      socket
+        .to(groupId)
+        .emit("user-stop-typing", { groupId, userId: currentUserId });
     });
 
     // ── disconnect ─────────────────────────────────────────────────────

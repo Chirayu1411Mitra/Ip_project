@@ -87,6 +87,10 @@ export const register = async (req, res) => {
       branch,
       role: "student",
     });
+
+    const token = generateToken(user._id);
+    setTokenCookie(res, token);
+
     res.status(201).json({
       user: serializeUser(user),
     });

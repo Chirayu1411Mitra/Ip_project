@@ -22,9 +22,7 @@ const register = async ({
 const login = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
-    console.log("Login response:", response);
     const { data } = response;
-    console.log("Login data:", data);
     return data;
   } catch (error) {
     console.error("Login error:", error);

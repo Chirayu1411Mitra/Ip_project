@@ -30,13 +30,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log("AuthContext: Starting login with email:", email);
       const response = await authService.login(email, password);
-      console.log("AuthContext: Login response received:", response);
       const { user } = response;
-      console.log("AuthContext: Setting user:", user);
+      // avoid logging full user object (may contain sensitive data)
       SetUser(user);
-      console.log("AuthContext: User set successfully");
     } catch (error) {
       console.error("AuthContext: Login failed:", error);
       throw error;

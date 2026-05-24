@@ -28,9 +28,8 @@ const Login = () => {
     setBanInfo(null);
     setLoading(true);
     try {
-      console.log("Login: Attempting to login with email:", form.email);
-      await login(form.email, form.password);
-      console.log("Login: Success, navigating to home");
+    await login(form.email, form.password);
+    // login successful
       navigate("/");
     } catch (err) {
       console.error("Login: Caught error:", err);

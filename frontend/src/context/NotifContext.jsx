@@ -14,7 +14,7 @@ export const NotifProvider = ({ children }) => {
         try {
             const res = await getNotifications();
             setNotifications(res.data);
-            console.log("Notifications API response:", res);
+                    // avoid logging full notifications response in production
         } catch (err) {
             console.error("Failed to fetch notifications", err);
         }
@@ -34,9 +34,9 @@ export const NotifProvider = ({ children }) => {
     useEffect(() => {
         if (!user?._id) return;
 
-        console.log("🟢 Connecting socket for user:", user._id);
+        // connect socket for user (do not print raw user id)
 
-        const socketInstance = io("http://localhost:8080", {
+        const socketInstance = io(import.meta.env.VITE_SOCKET_URL, {
             withCredentials: true,
         });
 
@@ -46,7 +46,7 @@ export const NotifProvider = ({ children }) => {
         socketInstance.emit("join", user._id);
 
         socketInstance.on("newNotification", (newNotif) => {
-            console.log("🔥 Realtime notification received:", newNotif);
+            // received realtime notification
 
             setNotifications((prev) => {
                 const exists = prev.some((n) => n._id === newNotif._id);
@@ -56,7 +56,7 @@ export const NotifProvider = ({ children }) => {
         });
 
         return () => {
-            console.log("🔴 Disconnecting socket");
+            // socket disconnecting
             socketInstance.disconnect();
         };
     }, [user?._id]);

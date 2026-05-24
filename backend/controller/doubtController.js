@@ -2,84 +2,48 @@ import Doubt from "../db/schemas/Doubt.js";
 import User from "../db/schemas/User.js";
 import Notification from "../db/schemas/Notification.js";
 import { io } from "../server.js";
+import { BedrockRuntimeClient, ApplyGuardrailCommand } from "@aws-sdk/client-bedrock-runtime";
+
+const bedrockClient = new BedrockRuntimeClient({
+  region: process.env.AWS_REGION || "us-east-1",
+});
 
 // Helper function to check moderation
 const checkModeration = async (text, userId) => {
   try {
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          temperature: 0.3,
-          max_tokens: 150,
-          messages: [
-            {
-              role: "system",
-              content: `You are a content moderation system for a student academic platform.
-Analyze the text and check for: hate speech/racial slurs, harassment/personal abuse, inappropriate sexual content, threats of violence.
-Respond ONLY with valid JSON: {"violated": true/false, "reason": "brief reason or empty string"}
-Be strict but fair. Academic frustration and criticism of ideas are allowed. Only flag clear serious violations.`,
-            },
-            {
-              role: "user",
-              content: `Check this content: "${text}"`,
-            },
-          ],
-        }),
-      },
-    );
+    const command = new ApplyGuardrailCommand({
+      guardrailIdentifier: process.env.AWS_GUARDRAIL_ID,
+      guardrailVersion: process.env.AWS_GUARDRAIL_VERSION || "DRAFT",
+      source: "INPUT",
+      content: [{ text: { text: text } }],
+    });
 
-    if (!response.ok) {
-      console.error("Groq Moderation API error:", response.status);
-      return { violated: false }; // fail open
-    }
+    const response = await bedrockClient.send(command);
 
-    const data = await response.json();
-    const textContent = data.choices?.[0]?.message?.content;
-
-    if (!textContent) {
-      return { violated: false };
-    }
-
-    let moderation;
-    try {
-      const clean = textContent.replace(/```json|```/g, "").trim();
-      moderation = JSON.parse(clean);
-    } catch {
-      console.error("Failed to parse moderation response:", textContent);
-      return { violated: false };
-    }
-
-    // If violated, ban the user and emit socket event
-    if (moderation.violated === true) {
+    if (response.action === "GUARDRAIL_INTERVENED") {
+      const reason = "Violated community policy";
       const user = await User.findByIdAndUpdate(
         userId,
         {
           bannedUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          banReason: moderation.reason,
+          banReason: reason,
         },
         { returnDocument: "after" },
       );
 
       // Emit ban event to frontend via Socket.io
       io.to(userId.toString()).emit("userBanned", {
-        message:
-          "Your message violated our community policy. Your account has been suspended for 30 days.",
-        banReason: moderation.reason,
-        bannedUntil: user.bannedUntil,
+        message: "Your message violated our community policy. Your account has been suspended for 30 days.",
+        banReason: reason,
+        bannedUntil: user?.bannedUntil,
         banned: true,
       });
 
-      console.log(`User ${userId} banned for: ${moderation.reason}`);
+      console.log(`User ${userId} banned for: ${reason}`);
+      return { violated: true, reason };
     }
 
-    return moderation;
+    return { violated: false };
   } catch (err) {
     console.error("Moderation check error:", err);
     return { violated: false }; // fail open

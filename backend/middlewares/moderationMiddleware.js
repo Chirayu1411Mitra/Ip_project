@@ -52,7 +52,7 @@ export const moderateContent = (fieldsToCheck) => {
 
       if (response.action === "GUARDRAIL_INTERVENED") {
         console.log("🚫 FLAGGED BY GUARDRAIL");
-        const reason = "Violated community policy (Flagged by AWS Guardrail)";
+        const reason = "Violated community policy";
         const user = await User.findByIdAndUpdate(
           req.userId,
           { bannedUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), banReason: reason },

@@ -1,3 +1,4 @@
+// backend/middlewares/moderationMiddleware.js
 import User from "../db/schemas/User.js";
 
 export const checkBanStatus = async (req, res, next) => {
@@ -37,42 +38,57 @@ export const moderateContent = (fieldsToCheck) => {
         return next();
       }
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 200,
-          system: `You are a content moderation system for a student academic platform.
+      const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile", // Latest available Groq model
+            temperature: 0.3,
+            max_tokens: 150,
+            messages: [
+              {
+                role: "system",
+                content: `You are a content moderation system for a student academic platform.
 Analyze the text and check for: hate speech/racial slurs, harassment/personal abuse, inappropriate sexual content, threats of violence.
 Respond ONLY with valid JSON: {"violated": true/false, "reason": "brief reason or empty string"}
 Be strict but fair. Academic frustration and criticism of ideas are allowed. Only flag clear serious violations.`,
-          messages: [
-            {
-              role: "user",
-              content: `Check this content: "${text}"`,
-            },
-          ],
-        }),
-      });
+              },
+              {
+                role: "user",
+                content: `Check this content: "${text}"`,
+              },
+            ],
+          }),
+        },
+      );
 
       if (!response.ok) {
-        console.error("Moderation API error:", response.status);
-        return next();
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Groq Moderation API error:", response.status, errorData);
+        return next(); // fail open — don't block user if API is down
       }
 
       const data = await response.json();
-      const textContent = data.content[0]?.text;
+      const textContent = data.choices?.[0]?.message?.content;
 
       if (!textContent) {
         return next();
       }
 
-      const moderation = JSON.parse(textContent);
+      let moderation;
+      try {
+        // Strip markdown code fences if model wraps JSON in ```
+        const clean = textContent.replace(/```json|```/g, "").trim();
+        moderation = JSON.parse(clean);
+      } catch {
+        console.error("Failed to parse moderation response:", textContent);
+        return next();
+      }
 
       if (moderation.violated === true) {
         const user = await User.findByIdAndUpdate(
@@ -81,7 +97,7 @@ Be strict but fair. Academic frustration and criticism of ideas are allowed. Onl
             bannedUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             banReason: moderation.reason,
           },
-          { new: true },
+          { returnDocument: "after" },
         );
 
         return res.status(403).json({
@@ -96,7 +112,7 @@ Be strict but fair. Academic frustration and criticism of ideas are allowed. Onl
       next();
     } catch (err) {
       console.error("moderateContent error:", err);
-      next();
+      next(); // fail open
     }
   };
 };

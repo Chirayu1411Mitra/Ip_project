@@ -28,4 +28,6 @@ const useSocket = (eventHandlers = {}) => {
   return { socket, connected };
 };
 
+export { useSocket };
+
 export default useSocket;

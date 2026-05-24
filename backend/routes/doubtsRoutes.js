@@ -12,21 +12,9 @@ import { getAllDoubts } from "../controller/doubtController.js";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authMiddleware,
-  checkBanStatus,
-  moderateContent(["question"]),
-  createDoubt,
-);
+router.post("/", authMiddleware, checkBanStatus, createDoubt);
 router.get("/", getAllDoubts);
-router.post(
-  "/:id/answer",
-  authMiddleware,
-  checkBanStatus,
-  moderateContent(["content"]),
-  addAnswer,
-);
+router.post("/:id/answer", authMiddleware, checkBanStatus, addAnswer);
 router.patch("/:id/upvote", authMiddleware, checkBanStatus, toggleUpvote);
 router.patch(
   "/:doubtId/answers/:answerId/upvote",

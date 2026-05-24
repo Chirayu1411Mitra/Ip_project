@@ -8,8 +8,10 @@ import {
   TrendingUp,
   AlertTriangle,
   Loader2,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../hooks/useSocket";
 import AnnouncementBanner from "../components/faculty/AnnouncementBanner";
 
 function DoubtPage() {
@@ -18,6 +20,8 @@ function DoubtPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // "all" | "unanswered"
   const [banInfo, setBanInfo] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(null);
+  const [isBanExpired, setIsBanExpired] = useState(false);
 
   const handleNewDoubt = (newDoubt) => {
     setDoubts((prev) => [newDoubt, ...prev]);
@@ -29,12 +33,55 @@ function DoubtPage() {
     );
   };
 
+  // Load doubts on mount
   useEffect(() => {
     getDoubts()
       .then((res) => setDoubts(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // Listen for real-time ban events from backend
+  useSocket({
+    userBanned: (banData) => {
+      setBanInfo(banData);
+    },
+  });
+
+  // Update countdown timer every second
+  useEffect(() => {
+    if (!banInfo?.bannedUntil) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const bannedUntil = new Date(banInfo.bannedUntil);
+      const diff = bannedUntil - now;
+
+      if (diff <= 0) {
+        setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setIsBanExpired(true);
+
+        // Auto-dismiss after 3 seconds
+        const dismissTimer = setTimeout(() => {
+          setBanInfo(null);
+          setIsBanExpired(false);
+        }, 3000);
+
+        return () => clearTimeout(dismissTimer);
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeRemaining({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [banInfo]);
 
   const filtered =
     filter === "unanswered"
@@ -54,7 +101,107 @@ function DoubtPage() {
     : 0;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50/50 min-h-screen custom-scrollbar">
+    <div className="flex-1 overflow-y-auto bg-gray-50/50 min-h-screen custom-scrollbar relative">
+      {/* Side Countdown Widget (Right Side) */}
+      {banInfo && (
+        <div className="fixed right-4 top-24 bg-white rounded-2xl shadow-2xl p-5 border-2 border-red-200 w-72 z-40 animate-in slide-in-from-right-4">
+          {isBanExpired ? (
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3 animate-bounce">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-green-700 mb-1">
+                Account Unbanned
+              </h3>
+              <p className="text-sm text-green-600">
+                Welcome back! You can now post again.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-red-100 rounded-full mb-3">
+                <AlertTriangle size={20} className="text-red-600" />
+              </div>
+              <h3 className="text-base font-bold text-red-800 mb-1">
+                Account Suspended
+              </h3>
+              <p className="text-xs text-red-600 mb-3">
+                Your account is currently suspended
+              </p>
+
+              {/* Ban Date */}
+              <div className="mb-3 pb-3 border-b border-red-100">
+                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">
+                  Expires On
+                </p>
+                <p className="text-sm font-bold text-gray-800">
+                  {new Date(banInfo.bannedUntil).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {new Date(banInfo.bannedUntil).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+
+              {/* Live Countdown */}
+              {timeRemaining && (
+                <div>
+                  <p className="text-xs text-red-600 uppercase font-bold tracking-wider mb-2">
+                    Time Remaining
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { value: timeRemaining.days, label: "D" },
+                      { value: timeRemaining.hours, label: "H" },
+                      { value: timeRemaining.minutes, label: "M" },
+                      { value: timeRemaining.seconds, label: "S" },
+                    ].map((item) => (
+                      <div key={item.label}>
+                        <div className="bg-red-50 rounded p-1.5">
+                          <p className="font-black text-red-600 text-xs">
+                            {String(item.value).padStart(2, "0")}
+                          </p>
+                        </div>
+                        <p className="text-xs text-red-600 font-bold mt-1">
+                          {item.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ban Reason */}
+              {banInfo.banReason && (
+                <div className="mt-3 pt-3 border-t border-red-100">
+                  <p className="text-xs text-gray-600">
+                    <strong className="text-red-700">Reason:</strong>{" "}
+                    {banInfo.banReason}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
@@ -173,6 +320,117 @@ function DoubtPage() {
           </>
         )}
 
+        {/* Ban Modal Popup */}
+        {banInfo && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in zoom-in-95">
+              {/* Close Button */}
+              <button
+                onClick={() => setBanInfo(null)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-400 hover:text-red-600" />
+              </button>
+
+              {/* Ban Icon */}
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={32} className="text-red-600" />
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-black text-red-800 text-center mb-2">
+                Account Suspended
+              </h2>
+
+              {/* Message */}
+              <p className="text-red-700 text-center mb-4 leading-relaxed">
+                {banInfo.message}
+              </p>
+
+              {/* Ban Reason */}
+              {banInfo.banReason && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                  <p className="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                    Reason for Suspension
+                  </p>
+                  <p className="text-red-700 text-sm">{banInfo.banReason}</p>
+                </div>
+              )}
+
+              {/* Ban Duration & Countdown */}
+              {banInfo.bannedUntil && (
+                <div className="mb-6">
+                  <div className="text-center mb-4">
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">
+                      Suspension Expires On
+                    </p>
+                    <p className="text-lg font-bold text-gray-800">
+                      {new Date(banInfo.bannedUntil).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(banInfo.bannedUntil).toLocaleTimeString(
+                        "en-US",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Countdown Timer */}
+                  {timeRemaining && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-xs text-red-600 uppercase font-bold tracking-wider mb-3 text-center">
+                        Time Remaining
+                      </p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { value: timeRemaining.days, label: "Days" },
+                          { value: timeRemaining.hours, label: "Hours" },
+                          { value: timeRemaining.minutes, label: "Mins" },
+                          { value: timeRemaining.seconds, label: "Secs" },
+                        ].map((item) => (
+                          <div key={item.label} className="text-center">
+                            <div className="bg-white rounded-lg p-2 mb-1">
+                              <p className="font-black text-red-600 text-lg">
+                                {String(item.value).padStart(2, "0")}
+                              </p>
+                            </div>
+                            <p className="text-xs text-red-600 font-bold">
+                              {item.label}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setBanInfo(null)}
+                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all active:scale-95"
+              >
+                Understand
+              </button>
+
+              {/* Help Text */}
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Please review our community guidelines before posting again.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Filter Tabs & Count */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar w-full sm:w-auto">
@@ -222,6 +480,7 @@ function DoubtPage() {
                 key={doubt._id}
                 doubt={doubt}
                 onUpdate={handleDoubtUpdate}
+                onBanError={setBanInfo}
               />
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useContext} from "react";
+import { createContext, useEffect, useState, useContext } from "react";
 import authService from "../services/authServices";
 
 export const AuthContext = createContext(null);
@@ -22,7 +22,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const refreshUser = async () => {
-    try { const userData = await authService.getMe(); SetUser(userData); } catch {}
+    try {
+      const userData = await authService.getMe();
+      SetUser(userData);
+    } catch {}
   };
 
   const login = async (email, password) => {
@@ -39,9 +42,16 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-  const register = async (name, email, password) => {
-    const { user } = await authService.register(name, email, password);
-    SetUser(user);
+  const register = async (formData) => {
+    try {
+      const response = await authService.register(formData);
+      // response is the user object from backend
+      SetUser(response);
+      return response;
+    } catch (error) {
+      console.error("AuthContext: Registration failed:", error);
+      throw error;
+    }
   };
   const logout = async () => {
     await authService.logout();

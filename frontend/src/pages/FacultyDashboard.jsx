@@ -183,7 +183,7 @@ const FacultyDashboard = () => {
                           remaining
                         </p>
                         <p className="text-sm italic">
-                          Reason: {student.banReason}
+                          Reason: {student.banReason.replace(/\s*\(Flagged by AWS Guardrail\)/gi, "")}
                         </p>
                       </div>
                     );

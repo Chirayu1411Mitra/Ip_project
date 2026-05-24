@@ -14,6 +14,7 @@ import DeadlinePage from "../pages/DeadlinePage";
 import GlobalDeadlinesPage from "../pages/GlobalDeadlinesPage";
 import ProfilePage from "../pages/ProfilePage";
 import FacultyDashboard from "../pages/FacultyDashboard";
+import NotesPage from "../pages/NotesPage";
 
 const AppRoute = () => {
   return (
@@ -34,6 +35,7 @@ const AppRoute = () => {
               element={<DeadlinePage />}
             />
             <Route path="/deadlines" element={<GlobalDeadlinesPage />} />
+            <Route path="/notes" element={<NotesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

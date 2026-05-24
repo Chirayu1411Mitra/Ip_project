@@ -133,7 +133,7 @@ function DoubtPage() {
                 </p>
                 {user?.banReason && (
                   <p className="text-red-600 text-sm italic mt-2 font-medium">
-                    Reason: {user.banReason}
+                    Reason: {user.banReason.replace(/\s*\(Flagged by AWS Guardrail\)/gi, "")}
                   </p>
                 )}
               </div>
@@ -163,7 +163,7 @@ function DoubtPage() {
                     </p>
                     {banInfo.banReason && (
                       <p className="text-red-600 text-sm italic mt-2 font-medium">
-                        Reason: {banInfo.banReason}
+                        Reason: {banInfo.banReason.replace(/\s*\(Flagged by AWS Guardrail\)/gi, "")}
                       </p>
                     )}
                   </div>

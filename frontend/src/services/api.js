@@ -100,3 +100,25 @@ export const deleteDeadline = (id) => api.delete(`/deadlines/${id}`);
 
 export const updateProfile = (body) => api.patch("/auth/profile", body);
 export const searchUsers = (q) => api.get(`/auth/search?q=${encodeURIComponent(q)}`);
+
+// ================= NOTES =================
+
+export const getNotes = (subject = "All") => api.get(`/notes?subject=${encodeURIComponent(subject)}`);
+export const deleteNote = (id) => api.delete(`/notes/${id}`);
+export const uploadNote = async (formData) => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const response = await fetch(`${BASE_URL}/notes`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  const data = await response.json();
+  if (response.status === 401) {
+    window.location.href = "/login";
+    return;
+  }
+  if (!response.ok) {
+    throw { response: { data, status: response.status } };
+  }
+  return { data };
+};

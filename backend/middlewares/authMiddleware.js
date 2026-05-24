@@ -1,5 +1,7 @@
 import { verifyToken } from "../utils/genToken.js";
-export const authMiddleware = (req, res, next) => {
+import User from "../db/schemas/User.js";
+
+export const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
   console.log("Auth Middleware - Token in cookies:", !!token);
   console.log("Auth Middleware - All cookies:", req.cookies);
@@ -17,6 +19,18 @@ export const authMiddleware = (req, res, next) => {
       "Auth Middleware - Token verified for userId:",
       decoded?.userId,
     );
+
+    // Check if user is suspended/banned
+    const user = await User.findById(decoded.userId).select("bannedUntil banReason");
+    if (user && user.bannedUntil && new Date(user.bannedUntil) > new Date()) {
+      console.log("Auth Middleware - User is banned, logging out.");
+      res.clearCookie("token");
+      return res.status(401).json({
+        message: "Your account has been suspended.",
+        banReason: user.banReason,
+      });
+    }
+
     req.userId = decoded.userId;
     next();
   } catch (err) {

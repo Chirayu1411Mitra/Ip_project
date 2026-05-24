@@ -31,16 +31,23 @@ export const applyGlobalMiddlewares = (app) => {
   const corsOptions = {
     origin: (origin, callback) => {
       // allow non-browser requests (Postman, server-to-server) which have no origin
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error(`CORS policy does not allow origin ${origin}`));
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        // explicitly disallow origin without throwing an error to avoid 500 responses
+        return callback(null, false);
     },
     credentials: true,
   };
 
   app.use(cors(corsOptions));
-  // handle preflight requests with same CORS options
-  app.options("*", cors(corsOptions));
+  // handle preflight requests with same CORS options without using a '*' route
+  // (some router/path-to-regexp versions throw on '*' as a route path)
+  app.use((req, res, next) => {
+    if (req.method === "OPTIONS") {
+      return cors(corsOptions)(req, res, next);
+    }
+    next();
+  });
   app.use(cookieParser());
   app.use(morgan("dev"));
   app.use(express.json());

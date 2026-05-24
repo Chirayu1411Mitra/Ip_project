@@ -44,6 +44,7 @@ const facultyLinks = [
     icon: <GraduationCap size={20} />,
     end: false,
   },
+  { to: "/notes", label: "Notes", icon: <BookOpen size={20} />, end: false },
   {
     to: "/doubts",
     label: "Doubts",

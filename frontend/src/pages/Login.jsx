@@ -96,7 +96,7 @@ const Login = () => {
                     </p>
                     {banInfo.banReason && (
                       <p className="text-red-600 text-xs italic mt-2 font-medium">
-                        Reason: {banInfo.banReason}
+                        Reason: {banInfo.banReason.replace(/\s*\(Flagged by AWS Guardrail\)/gi, "")}
                       </p>
                     )}
                   </div>

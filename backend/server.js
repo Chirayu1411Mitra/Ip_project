@@ -11,6 +11,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import groupsRoutes from "./routes/groupsRoutes.js";
 import deadlinesRoutes from "./routes/deadlinesRoutes.js";
 import facultyRoutes from "./routes/facultyRoutes.js";
+import notesRoutes from "./routes/notesRoutes.js";
 import { initSocketHandler } from "./socket/socketHandler.js";
 
 dotenv.config();
@@ -58,6 +59,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/groups", groupsRoutes);
 app.use("/api/deadlines", deadlinesRoutes);
 app.use("/api/faculty", facultyRoutes);
+app.use("/api/notes", notesRoutes);
 
 // connect to database
 connectDB();

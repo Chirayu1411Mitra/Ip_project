@@ -13,7 +13,8 @@ export const setTokenCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // For cross-site requests (frontend on different origin) we need SameSite=None and Secure
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
   console.log("setTokenCookie - Cookie set successfully");

@@ -4,9 +4,10 @@ import morgan from "morgan";
 import express from "express";
 
 export const applyGlobalMiddlewares = (app) => {
+  const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173";
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin: clientUrl,
       credentials: true,
     }),
   );

@@ -18,6 +18,9 @@ dotenv.config();
 
 const app = express();
 
+// When running behind a proxy (Render, Vercel), trust first proxy
+app.set("trust proxy", 1);
+
 // 🔥 create HTTP server
 const server = http.createServer(app);
 
@@ -38,6 +41,17 @@ initSocketHandler(io);
 // middlewares
 applyGlobalMiddlewares(app);
 
+// Root route to avoid 404s when visiting the service URL directly
+app.get("/", (req, res) => {
+  const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL;
+  if (clientUrl) {
+    // Redirect to the frontend login page when visiting the API root
+    const normalized = clientUrl.replace(/\/+$/g, "");
+    return res.redirect(`${normalized}/login`);
+  }
+  return res.send("IP Project API is running");
+});
+
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/doubts", doubtRoutes);
@@ -51,6 +65,7 @@ app.use("/api/notes", notesRoutes);
 connectDB();
 
 // ❗ use server.listen instead of app.listen
-server.listen(process.env.Port, () => {
-  console.log(`Server is running on port ${process.env.Port}`);
+const PORT = process.env.PORT || process.env.Port || 5000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

@@ -4,7 +4,7 @@ import { useAuth } from "./AuthContext";
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:8080";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
 export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
@@ -19,6 +19,11 @@ export const SocketProvider = ({ children }) => {
         socketRef.current = null;
         setConnected(false);
       }
+      return;
+    }
+
+    // If no socket URL is configured, do not attempt to connect
+    if (!SOCKET_URL) {
       return;
     }
 
